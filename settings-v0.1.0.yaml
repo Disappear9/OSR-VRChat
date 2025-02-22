@@ -1,0 +1,16 @@
+osr2:
+  com_port: COM3
+  inserted_params:
+  - /avatar/parameters/pcs/contact/enterPass
+  - /avatar/parameters/Shock/TouchAreaA
+  - /avatar/parameters/Shock/TouchAreaC
+  - /avatar/parameters/Shock/wildcard/*
+  inserting_params:
+  - /avatar/parameters/OGB/Pen/Dick/PenSelf
+  - /avatar/parameters/OGB/Pen/Dick/PenOthers
+  interval: 0.1
+  max_pos: 900
+  min_pos: 100
+  stroke_mode: binary
+  user_type: inserting
+version: v0.1.0

@@ -9,42 +9,70 @@ import copy
 from flask import Flask, render_template, redirect, request, jsonify
 from websockets.server import serve as wsserve
 
+
+
 import src
+from src.connector.osr_connector import OSRConnector
 # from src.connector.coyotev3ws import DGWSMessage, DGConnection
 # from src.handler.shock_handler import ShockHandler
+from src.handler.stroke_handler import StrokeHandler
 
 from pythonosc.osc_server import AsyncIOOSCUDPServer
 from pythonosc.dispatcher import Dispatcher
 
 app = Flask(__name__)
 
-CONFIG_FILE_VERSION  = 'v0.1.0'
+CONFIG_FILE_VERSION  = 'v0.2.1'
 CONFIG_FILENAME = f'settings-advanced-{CONFIG_FILE_VERSION}.yaml'
 CONFIG_FILENAME_BASIC = f'settings-{CONFIG_FILE_VERSION}.yaml'
 SETTINGS_BASIC = {
     'osr2':{
-        'avatar_params': [
+        'stroke_mode': 'linear', #linear or motion-based
+        'user_type': 'inserting', #inserting or inserted         
+        'objective': 'self', #self or others
+        'interval':0.1,
+        'max_pos':900,
+        'min_pos':100,
+        'com_port':'COM3',
+        'inserted': [
             '/avatar/parameters/pcs/contact/enterPass',
             '/avatar/parameters/Shock/TouchAreaA',
             '/avatar/parameters/Shock/TouchAreaC',
             '/avatar/parameters/Shock/wildcard/*',
         ],
-        'mode': 'binary', #binary or float
-        'strength_limit': 100,
+
+        'inserting': {
+            # '/avatar/parameters/PenSelfNewRoot',
+            # '/avatar/parameters/PenSelfNewTip',
+            'self' : "/avatar/parameters/OGB/Pen/Dick/PenSelf",
+            'others' : "/avatar/parameters/OGB/Pen/Dick/PenOthers"
+        },
+
+
     },
     'version': CONFIG_FILE_VERSION,
 }
 SETTINGS = {
     'SERVER_IP': None,
     'osr2':{
-        'avatar_params': [
+        'stroke_mode': 'linear', #linear or motion-based
+        'user_type': 'inserting', #inserting or inserted
+        'objective': 'self', #self or others
+        'interval':0.1,
+        'max_pos':900,
+        'min_pos':100,
+        'com_port':'COM3',
+        'inserted': [
             '/avatar/parameters/pcs/contact/enterPass',
             '/avatar/parameters/Shock/TouchAreaA',
             '/avatar/parameters/Shock/TouchAreaC',
             '/avatar/parameters/Shock/wildcard/*',
         ],
-        'mode': 'binary', #binary or float
-        'strength_limit': 100,
+
+        'inserting': {
+            'self' : "/avatar/parameters/OGB/Pen/Dick/PenSelf",
+            'others' : "/avatar/parameters/OGB/Pen/Dick/PenOthers"
+        },
     },
     'version': CONFIG_FILE_VERSION,
     'ws':{
@@ -54,7 +82,7 @@ SETTINGS = {
     },
     'osc':{
         'listen_host': '127.0.0.1',
-        'listen_port': 9001,
+        'listen_port': 9000,
     },
     'web_server':{
         'listen_host': '127.0.0.1',
@@ -81,7 +109,7 @@ def get_current_ip():
 
 @app.route("/")
 def web_index():
-    return redirect("/qr", code=302)
+    return "main page"#redirect("/qr", code=302)
 
 @app.route("/qr")
 def web_qr():
@@ -137,7 +165,7 @@ async def api_v1_status():
     return {
         'healthy': 'ok',
         'devices': [
-            *[{"type": 'shock', 'device':'coyotev3', 'attr': {'strength':conn.strength, 'uuid':conn.uuid}} for conn in srv.WS_CONNECTIONS],
+            # *[{"type": 'shock', 'device':'coyotev3', 'attr': {'strength':conn.strength, 'uuid':conn.uuid}} for conn in srv.WS_CONNECTIONS],
         ]
     }
 
@@ -196,14 +224,16 @@ async def api_v1_sendwave(channel, repeat, wavedata):
     wavestr = [wavedata for _ in range(repeat)]
     wavestr = json.dumps(wavestr, separators=(',', ':'))
     logger.success(f'[API][sendwave] C:{channel} R:{repeat} W:{wavedata}')
-    await DGConnection.broadcast_wave(channel=channel, wavestr=wavestr)
+    # await DGConnection.broadcast_wave(channel=channel, wavestr=wavestr)
     return {'result': 'OK'}
 
 def strip_basic_settings(settings: dict):
     ret = copy.deepcopy(settings)
-    del ret['osr2']['avatar_params']
-    del ret['osr2']['mode'] 
-    del ret['osr2']['strength_limit'] 
+    del ret['osr2']['inserting']
+    del ret['osr2']['inserted']
+    del ret['osr2']['stroke_mode'] 
+    del ret['osr2']['user_type'] 
+    del ret['osr2']['interval'] 
     return ret
 
 @app.route('/api/v1/config', methods=['GET', 'HEAD', 'OPTIONS'])
@@ -226,31 +256,36 @@ def update_config():
         'message': "Some Message, like, Please restart."
     }
 
-# async def wshandler(connection):
-#     client = DGConnection(connection, SETTINGS=SETTINGS)
-#     await client.serve()
 
 async def async_main():
+    # try:
+    #     connector = OSRConnector(port=SETTINGS['osr2']['com_port'])
+    #     await connector.connect()
+    #     await connector.async_write_to_serial("L0100I500")
+    #     time.sleep(1)
+    #     await connector.async_write_to_serial("L0900I500")
+    #     time.sleep(1)
+    #     await connector.async_write_to_serial("L0500I500")
+    #     logger.success("OSR设备自检成功")
+    # except Exception as e:
+    #     logger.error(traceback.format_exc())
+    #     logger.error("OSR设备连接失败，请检查串口地址是否正确，设备是否插紧")
+    #     return
+
     for handler in handlers:
-        handler.start_background_jobs()
+        # handler.start_background_jobs()
+        #handler.set_connector(connector)
+        1==1
     try: 
         server = AsyncIOOSCUDPServer((SETTINGS["osc"]["listen_host"], SETTINGS["osc"]["listen_port"]), dispatcher, asyncio.get_event_loop())
         logger.success(f'OSC Listening: {SETTINGS["osc"]["listen_host"]}:{SETTINGS["osc"]["listen_port"]}')
         transport, protocol = await server.create_serve_endpoint()
-        # await wsserve(wshandler, "127.0.0.1", 8765)
+        await asyncio.Future()
     except Exception as e:
         logger.error(traceback.format_exc())
         logger.error("OSC UDP Recevier listen failed.")
         logger.error("OSC监听失败，可能存在端口冲突")
         return
-    # try: 
-    #     async with wsserve(wshandler, SETTINGS['ws']["listen_host"], SETTINGS['ws']["listen_port"]):
-    #         await asyncio.Future()  # run forever
-    # except Exception as e:
-    #     logger.error(traceback.format_exc())
-    #     logger.error("Websocket server listen failed.")
-    #     logger.error("WS服务监听失败，可能存在端口冲突")
-    #     return
 
     transport.close()
 
@@ -288,9 +323,15 @@ def config_init():
         config_save()
     SERVER_IP = SETTINGS['SERVER_IP'] or get_current_ip()
 
-    SETTINGS['osr2']['avatar_params'] = SETTINGS_BASIC['osr2']['avatar_params']
-    SETTINGS['osr2']['mode'] = SETTINGS_BASIC['osr2']['mode']
-    SETTINGS['osr2']['strength_limit'] = SETTINGS_BASIC['osr2']['strength_limit']
+    SETTINGS['osr2']['inserting'] = SETTINGS_BASIC['osr2']['inserting']
+    SETTINGS['osr2']['inserted'] = SETTINGS_BASIC['osr2']['inserted']
+
+    SETTINGS['osr2']['stroke_mode'] = SETTINGS_BASIC['osr2']['stroke_mode']
+
+    SETTINGS['osr2']['user_type'] = SETTINGS_BASIC['osr2']['user_type']
+    SETTINGS['osr2']['interval'] = SETTINGS_BASIC['osr2']['interval']
+    SETTINGS['osr2']['com_port'] = SETTINGS_BASIC['osr2']['com_port']
+    # SETTINGS['osr2']['strength_limit'] = SETTINGS_BASIC['osr2']['strength_limit']
 
     logger.remove()
     logger.add(sys.stderr, level=SETTINGS['log_level'])
@@ -298,40 +339,34 @@ def config_init():
     logger.success("配置文件初始化完成，Websocket服务需要监听外来连接，如弹出防火墙提示，请点击允许访问。")
 
 
-
-def temp_handler_printer(address: str, *osc_arguments: List):
-    logger.success(f"Received OSC data from address {address}, with arguments: {str(osc_arguments)}")
-
-
 def main():
     global dispatcher, handlers
     dispatcher = Dispatcher()
     handlers = []
 
-    # for chann in ['A', 'B']:
-    # config_chann_name = f'channel_{chann.lower()}'
-    chann_mode = SETTINGS['osr2']['mode']
+    stroke_mode = SETTINGS['osr2']['stroke_mode']
+    insert_params = SETTINGS['osr2'][SETTINGS['osr2']['user_type']]
 
-    ###### handler to be designed
-    # shock_handler = ShockHandler(SETTINGS=SETTINGS, DG_CONN = DGConnection, channel_name=chann)
-    # handlers.append(shock_handler)
-    ######
+    stroke_handler = StrokeHandler(SETTINGS=SETTINGS)
+    handlers.append(stroke_handler)
 
-    for param in SETTINGS['osr2']['avatar_params']:
-        logger.success(f"Mode：{chann_mode} Listening：{param}")
-        dispatcher.map(param, temp_handler_printer)
-    
-    # if 'machine' in SETTINGS and 'tuya' in SETTINGS['machine']:
-    #     TuyaConn = TuYaConnection(
-    #         access_id=SETTINGS['machine']['tuya']['access_id'],
-    #         access_key=SETTINGS['machine']['tuya']['access_key'],
-    #         device_ids=SETTINGS['machine']['tuya']['device_ids'],
-    #     )=
-    #     machine_tuya_handler = TuyaHandler(SETTINGS=SETTINGS, DEV_CONN=TuyaConn)
-    #     handlers.append(machine_tuya_handler)
-    #     for param in SETTINGS['machine']['tuya']['avatar_params']:
-    #         logger.success(f"Machine Listening：{param}")
-    #         dispatcher.map(param, machine_tuya_handler.osc_handler)
+    target_param = insert_params[SETTINGS['osr2']['objective']]
+    logger.success(f"Mode：{stroke_mode} Listening：{target_param}")
+    dispatcher.map(target_param, handlers[0].osc_handler)
+
+    # if SETTINGS['osr2']['user_type'] == 'inserting':
+    #     for param in SETTINGS['osr2']['inserting_params']:
+    #         logger.success(f"Mode：{stroke_mode} Listening：{param}")
+    #         dispatcher.map(param, handlers[0].osc_handler)
+    # elif SETTINGS['osr2']['user_type'] == 'inserted':
+    #     for param in SETTINGS['osr2']['inserted_params']:
+    #         logger.success(f"Mode：{stroke_mode} Listening：{param}")
+    #         dispatcher.map(param, handlers[0].osc_handler)
+
+
+
+    if SETTINGS['osr2']['user_type'] not in ['inserting','inserted']:
+        logger.error("Wrong user type, only supports [inserting/inserted]")
 
 
     th = Thread(target=async_main_wrapper, daemon=True)
@@ -345,6 +380,7 @@ def main():
         if info_ip == '0.0.0.0':
             info_ip = get_current_ip()
         logger.success(f"请打开浏览器访问 http://{info_ip}:{SETTINGS['web_server']['listen_port']}")
+
     app.run(SETTINGS['web_server']['listen_host'], SETTINGS['web_server']['listen_port'], debug=False)
 
 if __name__ == "__main__":
@@ -357,6 +393,7 @@ if __name__ == "__main__":
     except Exception as e:
         logger.error(traceback.format_exc())
         logger.error("Unexpected Error.")
+    
     logger.info('Exiting in 1 seconds ... Press Ctrl-C to exit immediately')
     logger.info('退出等待1秒 ... 按Ctrl-C立即退出')
     time.sleep(1)
