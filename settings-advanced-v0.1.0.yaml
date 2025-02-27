@@ -9,7 +9,7 @@ osc:
   listen_host: 127.0.0.1
   listen_port: 9000
 osr2:
-  com_port: COM5
+  com_port: COM4
   inserted_ass: /avatar/parameters/OGB/Orf/Ass/PenOthers
   inserted_pussy: /avatar/parameters/OGB/Orf/Pussy/PenOthers
   inserting_others: /avatar/parameters/OGB/Pen/Dick/PenOthers
@@ -17,13 +17,13 @@ osr2:
   max_pos: 900
   max_velocity: 300
   min_pos: 100
-  objective: inserting_others
+  objective: inserting_self
   updates_per_second: 40
-version: v0.2.3
+version: v0.1.0
 web_server:
   listen_host: 127.0.0.1
   listen_port: 8800
 ws:
   listen_host: 0.0.0.0
   listen_port: 28846
-  master_uuid: 8c13024e-e00a-4726-a408-74baf6984e09
+  master_uuid: 9a2cb55c-0c30-493e-9840-345eb2bc9884
