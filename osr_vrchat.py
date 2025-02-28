@@ -1,13 +1,11 @@
-from typing import List
 import asyncio
-import yaml, uuid, os, sys, traceback, time, socket, re, json
+import yaml, uuid, os, sys, traceback, time
 from threading import Thread
 from loguru import logger
 import traceback
-import copy
+# import copy
 
-from flask import Flask, render_template, redirect, request, jsonify
-from websockets.server import serve as wsserve
+from flask import Flask
 
 from src.connector.osr_connector import OSRConnector
 from src.handler.stroke_handler import StrokeHandler

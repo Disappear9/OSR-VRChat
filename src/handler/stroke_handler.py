@@ -1,11 +1,6 @@
-import numpy as np
-import collections
 from .base_handler import BaseHandler
 from loguru import logger
-import time, asyncio, math, json
-
-# from ..connector.coyotev3ws import DGConnection
-
+import time, asyncio
 
 class StrokeHandler(BaseHandler):
     def __init__(self, SETTINGS: dict) -> None:
