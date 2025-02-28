@@ -15,7 +15,7 @@ from pythonosc.dispatcher import Dispatcher
 
 app = Flask(__name__)
 
-CONFIG_FILE_VERSION  = 'v0.1.0'
+CONFIG_FILE_VERSION  = 'v0.1.1'
 CONFIG_FILENAME = f'settings-advanced-{CONFIG_FILE_VERSION}.yaml'
 CONFIG_FILENAME_BASIC = f'settings-{CONFIG_FILE_VERSION}.yaml'
 connector = None
@@ -23,14 +23,14 @@ connector = None
 SETTINGS = {
     'SERVER_IP': None,
     'osr2':{     
-        'objective': 'inserting_self', #self or others (inserting_self, inserting_others, inserted_pussy, inserted_ass)
+        'objective': 'inserting_others', #self or others (inserting_self, inserting_others, inserted_pussy, inserted_ass)
         'max_pos':900,
         'min_pos':100,
-        'max_velocity': 300,
-        'updates_per_second': 40,
+        'max_velocity': 10,
+        'updates_per_second': 50,
         'com_port':'COM4',
-        'inserting_self': "/avatar/parameters/OGB/Pen/Dick/PenSelf",
-        'inserting_others': "/avatar/parameters/OGB/Pen/Dick/PenOthers",
+        'inserting_self': "/avatar/parameters/OGB/Pen/*",
+        'inserting_others': "/avatar/parameters/OGB/Pen/*",
         'inserted_ass':"/avatar/parameters/OGB/Orf/Ass/PenOthers",
         'inserted_pussy': "/avatar/parameters/OGB/Orf/Pussy/PenOthers"
     },
@@ -42,7 +42,7 @@ SETTINGS = {
     },
     'osc':{
         'listen_host': '127.0.0.1',
-        'listen_port': 9000,
+        'listen_port': 9001,
     },
     'web_server':{
         'listen_host': '127.0.0.1',

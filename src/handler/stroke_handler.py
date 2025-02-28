@@ -52,15 +52,31 @@ class StrokeHandler(BaseHandler):
         if self.objective in ['inserting_self', 'inserting_others']:
             new_level = 1 - new_level
 
-        return self.clamp(new_level, self.min_pos/1000, self.max_pos/1000), duration
+
+        move_range = (self.max_pos/1000) - (self.min_pos/1000)
+        final_level = move_range*new_level + (self.min_pos/1000)
+            # new_level = self.clamp(new_level, 1 - self.max_pos/1000, 1 - self.min_pos/1000)
+        return final_level, duration
+
+        # return self.clamp(new_level, self.min_pos/1000, self.max_pos/1000), duration
 
     def osc_handler(self, address, *args):
-        logger.info(f"VRCOSC: {address}: {args}")
-        val = self.param_sanitizer(args)
-        if self.last_update_time is None:
-            self.last_update_time = time.time()
-        asyncio.create_task(self._handler(val))
-        return 1
+        # logger.info(f"VRCOSC: {address}: {args}")
+        if "PenOthers" in address and self.objective == "inserting_others":
+            # logger.info(f"VRCOSC: {address}: {args}")
+            val = self.param_sanitizer(args)
+            if self.last_update_time is None:
+                self.last_update_time = time.time()
+            asyncio.create_task(self._handler(val))
+            return 1
+
+        elif "PenSelf" in address and self.objective == "inserting_self":
+            # logger.info(f"VRCOSC: {address}: {args}")
+            val = self.param_sanitizer(args)
+            if self.last_update_time is None:
+                self.last_update_time = time.time()
+            asyncio.create_task(self._handler(val))
+            return 1
     
 
     def build_tcode(self, level, duration):
@@ -69,7 +85,7 @@ class StrokeHandler(BaseHandler):
 
     async def handler_linear(self, level):
         new_level, duration = self.calculate_new_position_linear(new_level=level)
-        if duration <= 0 or new_level > 0.9 or new_level <0.1:
+        if duration <= 0:
             return
         logger.info(f"Calculated new level:{new_level}, duration:{duration}")
         tcode = self.build_tcode(new_level, duration)
