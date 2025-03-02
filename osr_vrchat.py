@@ -3,22 +3,34 @@ import yaml, uuid, os, sys, traceback, time
 from threading import Thread
 from loguru import logger
 import traceback
+import random
 # import copy
 
-from flask import Flask
+from flask import Flask, jsonify, render_template, Response
 
 from src.connector.osr_connector import OSRConnector
 from src.handler.stroke_handler import StrokeHandler
 
 from pythonosc.osc_server import AsyncIOOSCUDPServer
 from pythonosc.dispatcher import Dispatcher
+from collections import deque
 
 app = Flask(__name__)
 
-CONFIG_FILE_VERSION  = 'v0.1.1'
+CONFIG_FILE_VERSION  = 'v0.1.2'
 CONFIG_FILENAME = f'settings-advanced-{CONFIG_FILE_VERSION}.yaml'
 CONFIG_FILENAME_BASIC = f'settings-{CONFIG_FILE_VERSION}.yaml'
+MAX_LINECHART_POINTS = 100
+charts_data = [
+    deque(maxlen=MAX_LINECHART_POINTS) for _ in range(6)
+]
+timestamps = deque(maxlen=MAX_LINECHART_POINTS)
 connector = None
+stop_flag = False
+transport = None
+main_future = None
+th = None
+handlers = None
 
 SETTINGS = {
     'SERVER_IP': None,
@@ -26,9 +38,13 @@ SETTINGS = {
         'objective': 'inserting_others', #self or others (inserting_self, inserting_others, inserted_pussy, inserted_ass)
         'max_pos':900,
         'min_pos':100,
-        'max_velocity': 10,
+        'vrchat_max':1000,
+        'vrchat_min':0,
+        'max_velocity': 1400,
+        # 'max_acceleration':5000,
         'updates_per_second': 50,
         'com_port':'COM4',
+        # 'ema_filter' : 0.7,
         'inserting_self': "/avatar/parameters/OGB/Pen/*",
         'inserting_others': "/avatar/parameters/OGB/Pen/*",
         'inserted_ass':"/avatar/parameters/OGB/Orf/Ass/PenOthers",
@@ -60,9 +76,10 @@ SETTINGS = {
 SERVER_IP = None
 
 
-
 async def async_main():
-    global connector
+    global connector, transport, main_future
+    main_future = asyncio.Future()
+    # handlers[0].start_background_jobs()
     try:
         connector = OSRConnector(port=SETTINGS['osr2']['com_port'])
         await connector.connect()
@@ -83,7 +100,17 @@ async def async_main():
         server = AsyncIOOSCUDPServer((SETTINGS["osc"]["listen_host"], SETTINGS["osc"]["listen_port"]), dispatcher, asyncio.get_event_loop())
         logger.success(f'OSC Listening: {SETTINGS["osc"]["listen_host"]}:{SETTINGS["osc"]["listen_port"]}')
         transport, protocol = await server.create_serve_endpoint()
-        await asyncio.Future()
+
+        try:
+            await main_future
+        except asyncio.CancelledError:
+            pass
+        finally:
+            if transport:
+                transport.close()
+            if connector:
+                connector.disconnect()
+
     except Exception as e:
         logger.error(traceback.format_exc())
         logger.error("OSC UDP Recevier listen failed.")
@@ -128,8 +155,87 @@ def config_init():
     logger.success("配置文件初始化完成，Websocket服务需要监听外来连接，如弹出防火墙提示，请点击允许访问。")
 
 
+
+
+
+@app.route('/')
+def index():
+    return render_template('index.html')
+
+@app.route('/data')
+def data():
+
+    global handlers
+    
+    current_time = time.time()
+    timestamps.append(current_time)
+    if handlers:
+        panel_data = handlers[0].get_panel_data()
+        # print(panel_data)
+        charts_data[0].append(panel_data['raw_level'])
+        charts_data[1].append(panel_data['raw_velocity'])
+        charts_data[2].append(panel_data['raw_acceleration'])
+        charts_data[3].append(panel_data['processed_velocity'])
+        charts_data[4].append(panel_data['processed_acceleration'])
+        charts_data[5].append(panel_data['output_level'])
+    else:
+        for chart_deque in charts_data:
+            chart_deque.append(random.uniform(0, 10))
+
+    return jsonify({"timestamps": list(timestamps), "lines": [list(i) for i in charts_data]})
+
+
+import json
+
+# @app.route('/stream')
+# def stream():
+#     """
+#     SSE endpoint that streams new data points every 0.1s (10 Hz).
+#     """
+#     def generate_random_data():
+#         while True:
+#             # Generate 6 random floats
+#             data = [round(random.uniform(0, 100), 2) for _ in range(6)]
+#             # SSE format: "data: <string>"
+#             yield f"data: {json.dumps(data)}\n\n"
+#             time.sleep(0.1)  # Sleep 0.1 seconds (10 Hz)
+
+#     return Response(generate_random_data(), mimetype='text/event-stream')
+
+
+
+@app.route("/start", methods=["POST","GET"])
+def start_osr():
+    main()
+    return "OSR main loop started."
+
+
+@app.route("/check_alive", methods=["POST","GET"])
+def check_alive():
+    print(th.isAlive())
+    return "OSR main loop stopped."
+
+@app.route("/stop", methods=["POST","GET"])
+def stop_osr():
+    main_future.cancel()
+    th.join(10)
+    print(th.isAlive())
+    return "OSR main loop stopped."
+
+import click
+import logging
+log = logging.getLogger('werkzeug')
+log.setLevel(logging.ERROR)
+def secho(text, file=None, nl=None, err=None, color=None, **styles):
+    pass
+def echo(text, file=None, nl=None, err=None, color=None, **styles):
+    pass
+click.echo = echo
+click.secho = secho
+
+
 def main():
-    global dispatcher, handlers
+    global dispatcher, handlers,th
     dispatcher = Dispatcher()
     handlers = []
 
@@ -149,12 +255,14 @@ def main():
     th = Thread(target=async_main_wrapper, daemon=True)
     th.start()
 
-    app.run(SETTINGS['web_server']['listen_host'], SETTINGS['web_server']['listen_port'], debug=False)
+    # app.run(SETTINGS['web_server']['listen_host'], SETTINGS['web_server']['listen_port'], debug=False)
 
 if __name__ == "__main__":
     try:
         config_init()
-        main()
+        start_osr()
+        app.run(SETTINGS['web_server']['listen_host'], SETTINGS['web_server']['listen_port'], debug=False)
+        # start_osr()
     except ConfigFileInited:
         logger.success('The configuration file initialization is complete. Please modify it as needed and restart the program.')
         logger.success('配置文件初始化完成，请按需修改后重启程序。')
