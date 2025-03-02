@@ -4,9 +4,8 @@ from threading import Thread
 from loguru import logger
 import traceback
 import random
-# import copy
 
-from flask import Flask, jsonify, render_template, Response
+from flask import Flask, jsonify, render_template, render_template_string
 
 from src.connector.osr_connector import OSRConnector
 from src.handler.stroke_handler import StrokeHandler
@@ -14,6 +13,7 @@ from src.handler.stroke_handler import StrokeHandler
 from pythonosc.osc_server import AsyncIOOSCUDPServer
 from pythonosc.dispatcher import Dispatcher
 from collections import deque
+import webbrowser
 
 app = Flask(__name__)
 
@@ -75,6 +75,15 @@ SETTINGS = {
 }
 SERVER_IP = None
 
+def resource_path(relative_path):
+    """ Get absolute path to resource, works for dev and for PyInstaller """
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
 
 async def async_main():
     global connector, transport, main_future
@@ -185,25 +194,6 @@ def data():
     return jsonify({"timestamps": list(timestamps), "lines": [list(i) for i in charts_data]})
 
 
-import json
-
-# @app.route('/stream')
-# def stream():
-#     """
-#     SSE endpoint that streams new data points every 0.1s (10 Hz).
-#     """
-#     def generate_random_data():
-#         while True:
-#             # Generate 6 random floats
-#             data = [round(random.uniform(0, 100), 2) for _ in range(6)]
-#             # SSE format: "data: <string>"
-#             yield f"data: {json.dumps(data)}\n\n"
-#             time.sleep(0.1)  # Sleep 0.1 seconds (10 Hz)
-
-#     return Response(generate_random_data(), mimetype='text/event-stream')
-
-
-
 @app.route("/start", methods=["POST","GET"])
 def start_osr():
     main()
@@ -255,6 +245,7 @@ def main():
     th = Thread(target=async_main_wrapper, daemon=True)
     th.start()
 
+    webbrowser.open_new_tab(f"http://127.0.0.1:{SETTINGS['web_server']['listen_port']}")
     # app.run(SETTINGS['web_server']['listen_host'], SETTINGS['web_server']['listen_port'], debug=False)
 
 if __name__ == "__main__":

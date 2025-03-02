@@ -17,11 +17,11 @@ class StrokeHandler(BaseHandler):
         self.min_pos = self.stroke_settings['min_pos']
         self.updates_per_second = self.stroke_settings['updates_per_second']
         self.max_velocity = self.stroke_settings['max_velocity']
-        self.max_acceleration = self.stroke_settings['max_acceleration']
-        self.ema_filter = self.stroke_settings['ema_filter']
+        # self.max_acceleration = self.stroke_settings['max_acceleration']
+        # self.ema_filter = self.stroke_settings['ema_filter']
         self.vrchat_min = self.stroke_settings['vrchat_min']
         self.vrchat_max = self.stroke_settings['vrchat_max']
-        self.last_levels = deque(maxlen=5)
+        # self.last_levels = deque(maxlen=5)
         self.expected_time = 1/self.updates_per_second
 
 
@@ -131,72 +131,6 @@ class StrokeHandler(BaseHandler):
         self.panel_data["output_level"] = final_level*1000
         
         return final_level, duration, new_velocity
-
-    import time
-
-    def update_position_with_velocity_clipping(current_position: float, target_position: float, dt: float, max_velocity: float) -> float:
-        """
-        Updates current_position by moving toward target_position without exceeding max_velocity.
-        """
-        # Calculate the required movement
-        delta = target_position - current_position
-        
-        # Calculate desired velocity to cover delta in time dt
-        desired_velocity = delta / dt
-        
-        # Clip the velocity if it exceeds the maximum allowed velocity
-        if abs(desired_velocity) > max_velocity:
-            desired_velocity = max_velocity if desired_velocity > 0 else -max_velocity
-        
-        # Update current position based on clipped velocity
-        position_step = desired_velocity * dt
-        new_position = current_position + position_step
-        
-        return new_position
-
-    def synchronized_control_loop(get_target_position, get_current_position, send_to_device,
-                                max_velocity: float, update_rate: float = 50.0, tolerance: float = 0.01):
-        """
-        Continuously synchronizes the device's position to a frequently-updated target.
-        
-        :param get_target_position: Function returning the latest target position.
-        :param get_current_position: Function returning the device's current position.
-        :param send_to_device: Function to send the new position to the device.
-        :param max_velocity: Maximum allowed velocity (units per second).
-        :param update_rate: Control loop update rate in Hz.
-        :param tolerance: Acceptable error margin.
-        """
-        dt = 1.0 / update_rate
-        current_position = get_current_position()
-
-        while True:
-            start_time = time.time()
-            
-            # Get the latest target position (this might be updated by another process)
-            target_position = get_target_position()
-            
-            # Optionally, update current_position by reading sensor data if available
-            # For this example, we'll assume our variable is the truth
-            current_position = get_current_position()
-            
-            # Calculate the new position with velocity clipping
-            new_position = update_position_with_velocity_clipping(current_position, target_position, dt, max_velocity)
-            
-            # Send the updated position command to the device
-            send_to_device(new_position)
-            
-            # Optional: Update our current position variable if the device responds quickly
-            current_position = new_position
-            
-            # If synchronization error is within tolerance, you might sleep longer or trigger events
-            if abs(target_position - current_position) < tolerance:
-                pass  # synchronized, but continue to update for changes
-            
-            # Maintain the control loop update rate
-            elapsed = time.time() - start_time
-            time.sleep(max(0, dt - elapsed))
-
-    
 
     def osc_handler(self, address, *args):
         # logger.info(f"VRCOSC: {address}: {args}")
