@@ -29,6 +29,8 @@ jobs:
           nuitka-version: main
           script-name: osr_vrchat.py
           mode: app
+          include-data-dir: |
+            templates=templates
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
