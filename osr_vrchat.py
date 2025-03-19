@@ -8,8 +8,7 @@ import random
 from flask import Flask, jsonify, render_template, render_template_string
 
 from src.connector.osr_connector import OSRConnector
-from src.handler.stroke_handler import StrokeHandler
-
+from src.handler.stroke_handler import StrokeHandler                                                                                                                                                                                                                  
 from pythonosc.osc_server import AsyncIOOSCUDPServer
 from pythonosc.dispatcher import Dispatcher
 from collections import deque
