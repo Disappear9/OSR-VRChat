@@ -68,7 +68,7 @@ SETTINGS = {
     },
     'log_level': 'INFO',
     'general': {
-        'auto_open_qr_web_page': True,
+        'auto_open_web_page': True,
         'local_ip_detect': {
             'host': '223.5.5.5',
             'port': 80,
@@ -92,14 +92,19 @@ async def async_main():
     main_future = asyncio.Future()
     # handlers[0].start_background_jobs()
     if (SETTINGS['osr2']['use_udp_server'] == True):
-        connector = OSRConnector(ip=SETTINGS['osr2']['udp_server_ip'], port=SETTINGS['osr2']['udp_server_port'])
-        await connector.connect()
-        await connector.async_write_to_udp("L0100I500")
-        time.sleep(1)
-        await connector.async_write_to_udp("L0500I500")
-        time.sleep(1)
-        await connector.async_write_to_udp("L0900I500")
-        logger.success("OSR设备自检成功")
+        try:
+            connector = OSRConnector(ip=SETTINGS['osr2']['udp_server_ip'], port=SETTINGS['osr2']['udp_server_port'])
+            await connector.connect()
+            await connector.async_write_to_udp("L0100I500")
+            time.sleep(1)
+            await connector.async_write_to_udp("L0500I500")
+            time.sleep(1)
+            await connector.async_write_to_udp("L0900I500")
+            logger.success("OSR设备自检指令已发送")
+        except Exception as e:
+            logger.error(traceback.format_exc())
+            logger.error("OSR设备自检指令发送失败")
+            return
     else:
         try:
             connector = OSRConnector(port=SETTINGS['osr2']['com_port'])
@@ -257,8 +262,8 @@ def main():
     th = Thread(target=async_main_wrapper, daemon=True)
     th.start()
 
-    webbrowser.open_new_tab(f"http://127.0.0.1:{SETTINGS['web_server']['listen_port']}")
-    # app.run(SETTINGS['web_server']['listen_host'], SETTINGS['web_server']['listen_port'], debug=False)
+    if (SETTINGS['general']['auto_open_web_page'] == True):
+        webbrowser.open_new_tab(f"http://127.0.0.1:{SETTINGS['web_server']['listen_port']}")
 
 if __name__ == "__main__":
     try:
