@@ -4,6 +4,7 @@ import sys
 import time
 import asyncio
 import glob
+import socket
 
 
 def serial_ports():
@@ -35,10 +36,12 @@ def serial_ports():
     return result
 
 class OSRConnector:
-    def __init__(self, port='COM3', baudrate=115200):
+    def __init__(self, ip=None, port=None, baudrate=115200):
         self.port = port
         self.baudrate = baudrate
+        self.ip = ip
         self.ser = None
+        self.sock = None
         self.reader_thread = None
         self.writer_lock = threading.Lock()
 
@@ -49,14 +52,18 @@ class OSRConnector:
         await loop.run_in_executor(None, self._connect)
 
     def _connect(self):
-        try:
-            self.ser = serial.Serial(self.port, self.baudrate)
-            # self.reader_thread = threading.Thread(target=self.read_from_serial, daemon=True)
-            # self.reader_thread.start()
-            print(f"Connected to {self.port} at {self.baudrate} baud.")
-        except Exception as e:
-            print(f"Error connecting to serial port: {e}")
-            self.ser = None
+        if (self.ip == None):
+            try:
+                self.ser = serial.Serial(self.port, self.baudrate)
+                # self.reader_thread = threading.Thread(target=self.read_from_serial, daemon=True)
+                # self.reader_thread.start()
+                print(f"Connected to {self.port} at {self.baudrate} baud.")
+            except Exception as e:
+                print(f"Error connecting to serial port: {e}")
+                self.ser = None
+        else:
+            self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+
 
     # def read_from_serial(self):
     #     #只发送，不接收
@@ -86,6 +93,12 @@ class OSRConnector:
                     self.ser.write(f"{line}\n".encode('utf-8'))
         else:
             print("[WARN] Disconnected, skipping stream write.")
+
+    async def async_write_to_udp(self, *lines):
+        if self.sock:
+            for line in lines:
+                print(f"[SEND UDP] {line}")
+                self.sock.sendto(f"{line}\n".encode('utf-8'), (self.ip, self.port))
 
     def write_to_serial(self, *lines):
         if self.ser and self.ser.is_open:

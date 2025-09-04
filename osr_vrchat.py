@@ -16,7 +16,7 @@ import webbrowser
 
 app = Flask(__name__, template_folder='templates')
 
-CONFIG_FILE_VERSION  = 'v0.1.2'
+CONFIG_FILE_VERSION  = 'v0.2.0'
 CONFIG_FILENAME = f'settings-advanced-{CONFIG_FILE_VERSION}.yaml'
 CONFIG_FILENAME_BASIC = f'settings-{CONFIG_FILE_VERSION}.yaml'
 MAX_LINECHART_POINTS = 100
@@ -43,6 +43,9 @@ SETTINGS = {
         # 'max_acceleration':5000,
         'updates_per_second': 50,
         'com_port':'COM4',
+        'use_udp_server': False,
+        'udp_server_ip': '192.168.1.100',
+        'udp_server_port': 8000,
         # 'ema_filter' : 0.7,
         'inserting_self': "/avatar/parameters/OGB/Pen/*",
         'inserting_others': "/avatar/parameters/OGB/Pen/*",
@@ -88,19 +91,29 @@ async def async_main():
     global connector, transport, main_future
     main_future = asyncio.Future()
     # handlers[0].start_background_jobs()
-    try:
-        connector = OSRConnector(port=SETTINGS['osr2']['com_port'])
+    if (SETTINGS['osr2']['use_udp_server'] == True):
+        connector = OSRConnector(ip=SETTINGS['osr2']['udp_server_ip'], port=SETTINGS['osr2']['udp_server_port'])
         await connector.connect()
-        await connector.async_write_to_serial("L0100I500")
+        await connector.async_write_to_udp("L0100I500")
         time.sleep(1)
-        await connector.async_write_to_serial("L0500I500")
+        await connector.async_write_to_udp("L0500I500")
         time.sleep(1)
-        await connector.async_write_to_serial("L0900I500")
+        await connector.async_write_to_udp("L0900I500")
         logger.success("OSR设备自检成功")
-    except Exception as e:
-        logger.error(traceback.format_exc())
-        logger.error("OSR设备连接失败，请检查串口地址是否正确，设备是否插紧")
-        return
+    else:
+        try:
+            connector = OSRConnector(port=SETTINGS['osr2']['com_port'])
+            await connector.connect()
+            await connector.async_write_to_serial("L0100I500")
+            time.sleep(1)
+            await connector.async_write_to_serial("L0500I500")
+            time.sleep(1)
+            await connector.async_write_to_serial("L0900I500")
+            logger.success("OSR设备自检成功")
+        except Exception as e:
+            logger.error(traceback.format_exc())
+            logger.error("OSR设备连接失败，请检查串口地址是否正确，设备是否插紧")
+            return
 
     for handler in handlers:
         handler.set_connector(connector)
@@ -262,5 +275,6 @@ if __name__ == "__main__":
     
     logger.info('Exiting in 1 seconds ... Press Ctrl-C to exit immediately')
     logger.info('退出等待1秒 ... 按Ctrl-C立即退出')
-    connector.disconnect()
+    if (SETTINGS['osr2']['use_udp_server'] == False):
+        connector.disconnect()
     time.sleep(1)
