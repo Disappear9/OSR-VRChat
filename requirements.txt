@@ -1,7 +1,6 @@
 flask
 flask[async]
 loguru
-websockets
-python-osc
+python-osc==1.8.3
 pyyaml
 pyserial
