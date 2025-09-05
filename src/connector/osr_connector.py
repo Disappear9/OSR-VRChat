@@ -5,7 +5,7 @@ import time
 import asyncio
 import glob
 import socket
-
+from loguru import logger
 
 def serial_ports():
     """ Lists serial port names
@@ -57,9 +57,9 @@ class OSRConnector:
                 self.ser = serial.Serial(self.port, self.baudrate)
                 # self.reader_thread = threading.Thread(target=self.read_from_serial, daemon=True)
                 # self.reader_thread.start()
-                print(f"Connected to {self.port} at {self.baudrate} baud.")
+                logger.info(f"Connected to {self.port} at {self.baudrate} baud.")
             except Exception as e:
-                print(f"Error connecting to serial port: {e}")
+                logger.error(f"Error connecting to serial port: {e}")
                 self.ser = None
         else:
             self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -80,34 +80,34 @@ class OSRConnector:
     async def disconnect(self):
         if self.ser and self.ser.is_open:
             self.ser.close()
-            print(f"Disconnected from {self.port}.")
+            logger.info(f"Disconnected from {self.port}.")
         else:
-            print("No connection to disconnect.")
+            logger.info("No connection to disconnect.")
 
 
     async def async_write_to_serial(self, *lines):
         if self.ser and self.ser.is_open:
             with self.writer_lock:
                 for line in lines:
-                    print(f"[SEND] {line}")
+                    logger.info(f"[SEND] {line}")
                     self.ser.write(f"{line}\n".encode('utf-8'))
         else:
-            print("[WARN] Disconnected, skipping stream write.")
+            logger.error("[WARN] Disconnected, skipping stream write.")
 
     async def async_write_to_udp(self, *lines):
         if self.sock:
             for line in lines:
-                print(f"[SEND UDP] {line}")
+                logger.info(f"[UDP SEND] {line}")
                 self.sock.sendto(f"{line}\n".encode('utf-8'), (self.ip, self.port))
 
     def write_to_serial(self, *lines):
         if self.ser and self.ser.is_open:
             with self.writer_lock:
                 for line in lines:
-                    print(f"[SEND] {line}")
+                    logger.info(f"[SER SEND] {line}")
                     self.ser.write(f"{line}\n".encode('utf-8'))
         else:
-            print("[WARN] Disconnected, skipping stream write.")
+            logger.error("[WARN] Disconnected, skipping stream write.")
 
 # Usage
 # if __name__ == "__main__":

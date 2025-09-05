@@ -1,6 +1,6 @@
 flask
 flask[async]
 loguru
-python-osc==1.8.3
+python-osc
 pyyaml
 pyserial

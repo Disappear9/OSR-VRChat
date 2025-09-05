@@ -141,15 +141,15 @@ class StrokeHandler(BaseHandler):
             if self.last_update_time is None:
                 self.last_update_time = time.time()
             asyncio.create_task(self._handler(val))
-            return 1
+            return
 
         elif "PenSelf" in address and self.objective == "inserting_self":
-            logger.info(f"VRCOSC: {address}: {args}")
+            # logger.info(f"VRCOSC: {address}: {args}")
             val = self.param_sanitizer(args)
             if self.last_update_time is None:
                 self.last_update_time = time.time()
             asyncio.create_task(self._handler(val))
-            return 1
+            return
     
 
     def build_tcode_interval(self, level, duration):
