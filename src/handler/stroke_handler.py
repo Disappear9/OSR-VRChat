@@ -95,7 +95,10 @@ class StrokeHandler(BaseHandler):
 
 
         
-        self.expected_time = 1000 * (new_level - self.last_level) / abs(new_velocity)
+        if abs(new_velocity) > 0:
+            self.expected_time = 1000 * (new_level - self.last_level) / abs(new_velocity)
+        else:
+            self.expected_time = 0.02  # 默认20ms
         self.panel_data["raw_level"] = new_level*1000
         self.panel_data["raw_velocity"] = new_velocity
         self.panel_data["raw_acceleration"] = acceleration
@@ -133,22 +136,33 @@ class StrokeHandler(BaseHandler):
         return final_level, duration, new_velocity
 
     def osc_handler(self, address, *args):
-        # logger.info(f"VRCOSC: {address}: {args}")
         if "PenOthers" in address and self.objective == "inserting_others":
-            # logger.info(f"VRCOSC: {address}: {args}")
+            logger.info(f"Match: inserting_others")
             val = self.param_sanitizer(args)
             if self.last_update_time is None:
                 self.last_update_time = time.time()
             asyncio.create_task(self._handler(val))
-            return 1
 
         elif "PenSelf" in address and self.objective == "inserting_self":
-            logger.info(f"VRCOSC: {address}: {args}")
+            logger.info(f"Match: inserting_self")
             val = self.param_sanitizer(args)
             if self.last_update_time is None:
                 self.last_update_time = time.time()
             asyncio.create_task(self._handler(val))
-            return 1
+            
+        elif "PenOthers" in address and self.objective == "inserted_pussy":
+            logger.info(f"Match: inserted_pussy")
+            val = self.param_sanitizer(args)
+            if self.last_update_time is None:
+                self.last_update_time = time.time()
+            asyncio.create_task(self._handler(val))
+            
+        elif "PenOthers" in address and self.objective == "inserted_ass":
+            logger.info(f"Match: inserted_ass")
+            val = self.param_sanitizer(args)
+            if self.last_update_time is None:
+                self.last_update_time = time.time()
+            asyncio.create_task(self._handler(val))
     
 
     def build_tcode_interval(self, level, duration):
@@ -162,7 +176,7 @@ class StrokeHandler(BaseHandler):
         new_level, duration, new_velocity = self.calculate_new_position_linear(new_level=level)
         if duration <= 0:
             return
-        logger.info(f"Calculated new level:{new_level}, duration:{duration}")
+        logger.info(f"Level:{new_level}, duration:{duration}")
         tcode = self.build_tcode_velocity(new_level, abs(new_velocity))
         if not self.OSR_CONN is None:
             await self.OSR_CONN.async_write_to_serial(tcode)
