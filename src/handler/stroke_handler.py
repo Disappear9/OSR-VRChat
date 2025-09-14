@@ -17,6 +17,7 @@ class StrokeHandler(BaseHandler):
         self.min_pos = self.stroke_settings['min_pos']
         self.updates_per_second = self.stroke_settings['updates_per_second']
         self.max_velocity = self.stroke_settings['max_velocity']
+        self.l0_axis_invert = self.stroke_settings.get('l0_axis_invert', False)
         # self.max_acceleration = self.stroke_settings['max_acceleration']
         # self.ema_filter = self.stroke_settings['ema_filter']
         self.vrchat_min = self.stroke_settings['vrchat_min']
@@ -166,9 +167,15 @@ class StrokeHandler(BaseHandler):
     
 
     def build_tcode_interval(self, level, duration):
+        # Apply L0 axis inversion if enabled
+        if self.l0_axis_invert:
+            level = 1.0 - level
         return f"L0{int(round(level,3)*1000)}I{int(round(duration,3)*1000)}"
     
     def build_tcode_velocity(self, level, velocity):
+        # Apply L0 axis inversion if enabled
+        if self.l0_axis_invert:
+            level = 1.0 - level
         logger.info(f"L0{int(round(level,3)*1000)}S{int(round(velocity,3))}")
         return f"L0{int(round(level,3)*1000)}S{int(round(velocity,3))}"
 

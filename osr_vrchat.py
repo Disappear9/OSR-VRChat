@@ -40,6 +40,7 @@ SETTINGS = {
         'vrchat_max':1000,
         'vrchat_min':0,
         'max_velocity': 1400,
+        'l0_axis_invert': False,
         # 'max_acceleration':5000,
         'updates_per_second': 50,
         'com_port':'COM4',
