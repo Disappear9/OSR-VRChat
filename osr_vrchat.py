@@ -321,5 +321,6 @@ if __name__ == "__main__":
     
     logger.info('Exiting in 1 seconds ... Press Ctrl-C to exit immediately')
     logger.info('退出等待1秒 ... 按Ctrl-C立即退出')
-    connector.disconnect()
+    if connector:
+        connector.disconnect()
     time.sleep(1)
