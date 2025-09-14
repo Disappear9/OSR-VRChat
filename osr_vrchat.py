@@ -118,7 +118,10 @@ async def async_main():
             if transport:
                 transport.close()
             if connector:
-                connector.disconnect()
+                # 使用同步方式关闭串口连接
+                if hasattr(connector, 'ser') and connector.ser and connector.ser.is_open:
+                    connector.ser.close()
+                    print(f"Disconnected from {connector.port}.")
 
     except Exception as e:
         logger.error(traceback.format_exc())
@@ -270,6 +273,37 @@ def stop_osr():
     print(th.isAlive())
     return "OSR main loop stopped."
 
+@app.route("/restart", methods=["POST","GET"])
+def restart_osr():
+    """重启后端程序"""
+    global main_future, th, connector, transport
+    try:
+        # 停止当前运行的程序
+        if main_future and not main_future.done():
+            main_future.cancel()
+        if th and th.is_alive():
+            th.join(10)
+        
+        # 确保串口连接完全断开
+        if connector:
+            # 使用同步方式关闭串口连接
+            if hasattr(connector, 'ser') and connector.ser and connector.ser.is_open:
+                connector.ser.close()
+                print(f"Disconnected from {connector.port}.")
+            connector = None
+        
+        # 确保transport关闭
+        if transport:
+            transport.close()
+            transport = None
+        
+        # 重新启动（不打开浏览器）
+        main_without_browser()
+        return jsonify({'success': True, 'message': '后端程序重启成功'})
+    except Exception as e:
+        logger.error(f"重启失败: {e}")
+        return jsonify({'success': False, 'message': str(e)}), 500
+
 import click
 import logging
 log = logging.getLogger('werkzeug')
@@ -281,6 +315,27 @@ def echo(text, file=None, nl=None, err=None, color=None, **styles):
 click.echo = echo
 click.secho = secho
 
+
+def main_without_browser():
+    """启动主程序但不打开浏览器"""
+    global dispatcher, handlers,th
+    dispatcher = Dispatcher()
+    handlers = []
+
+    insert_params = SETTINGS['osr2'][SETTINGS['osr2']['objective']]
+
+    stroke_handler = StrokeHandler(SETTINGS=SETTINGS)
+    handlers.append(stroke_handler)
+
+    target_param = insert_params#[SETTINGS['osr2']['objective']]
+    logger.success(f"Listening：{target_param}")
+    dispatcher.map(target_param, handlers[0].osc_handler)
+
+    if SETTINGS['osr2']['objective'] not in ['inserting_others','inserting_self','inserted_ass','inserted_pussy']:
+        logger.error("Wrong objective type!")
+
+    th = Thread(target=async_main_wrapper, daemon=True)
+    th.start()
 
 def main():
     global dispatcher, handlers,th
@@ -322,5 +377,8 @@ if __name__ == "__main__":
     logger.info('Exiting in 1 seconds ... Press Ctrl-C to exit immediately')
     logger.info('退出等待1秒 ... 按Ctrl-C立即退出')
     if connector:
-        connector.disconnect()
+        # 使用同步方式关闭串口连接
+        if hasattr(connector, 'ser') and connector.ser and connector.ser.is_open:
+            connector.ser.close()
+            print(f"Disconnected from {connector.port}.")
     time.sleep(1)

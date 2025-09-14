@@ -477,8 +477,8 @@
                         <i class="bi bi-save"></i> 保存配置
                     </button>
 
-                    <button type="button" class="btn btn-secondary" onclick="loadConfig()">
-                        <i class="bi bi-arrow-clockwise"></i> 重新加载
+                    <button type="button" class="btn btn-secondary" onclick="restartBackend()">
+                        <i class="bi bi-arrow-clockwise"></i> 重新启动后端
                     </button>
                 </div>
             </div>
@@ -638,6 +638,32 @@
                 }
             } catch (error) {
                 console.error('Error updating status:', error);
+            }
+        }
+
+        // Restart backend
+        async function restartBackend() {
+            try {
+                showAlert('正在重启后端程序...', 'info');
+                
+                const response = await fetch('/restart', {
+                    method: 'POST'
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showAlert('后端程序重启成功！', 'success');
+                    // 延迟更新状态，给后端时间启动
+                    setTimeout(() => {
+                        updateStatus();
+                    }, 2000);
+                } else {
+                    throw new Error(result.message || '重启失败');
+                }
+            } catch (error) {
+                console.error('Error restarting backend:', error);
+                showAlert('后端程序重启失败: ' + error.message, 'danger');
             }
         }
 
