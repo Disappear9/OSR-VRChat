@@ -5,7 +5,7 @@ from loguru import logger
 import traceback
 import random
 
-from flask import Flask, jsonify, render_template, render_template_string
+from flask import Flask, jsonify, render_template, render_template_string, request
 
 from src.connector.osr_connector import OSRConnector
 from src.handler.stroke_handler import StrokeHandler                                                                                                                                                                                                                  
@@ -169,10 +169,68 @@ def config_init():
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    return render_template('config.html')
 
 @app.route('/data')
-def data():
+def data_page():
+    return render_template('index.html')
+
+@app.route('/config')
+def config_page():
+    return render_template('config.html')
+
+@app.route('/api/config', methods=['GET'])
+def get_config():
+    """获取当前配置"""
+    return jsonify(SETTINGS)
+
+@app.route('/api/config', methods=['POST'])
+def save_config():
+    """保存配置"""
+    try:
+        new_config = request.json
+        
+        # 更新配置
+        if 'osr2' in new_config:
+            SETTINGS['osr2'].update(new_config['osr2'])
+        if 'osc' in new_config:
+            SETTINGS['osc'].update(new_config['osc'])
+        if 'web_server' in new_config:
+            SETTINGS['web_server'].update(new_config['web_server'])
+        if 'ws' in new_config:
+            SETTINGS['ws'].update(new_config['ws'])
+        if 'general' in new_config:
+            SETTINGS['general'].update(new_config['general'])
+        if 'log_level' in new_config:
+            SETTINGS['log_level'] = new_config['log_level']
+            
+        # 保存到文件
+        config_save()
+        
+        return jsonify({'success': True, 'message': '配置保存成功'})
+    except Exception as e:
+        logger.error(f"保存配置失败: {e}")
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@app.route('/api/status', methods=['GET'])
+def get_status():
+    """获取系统状态"""
+    global connector, transport, th
+    
+    device_connected = connector is not None and connector.ser is not None
+    osc_running = transport is not None
+    main_running = th is not None and th.is_alive()
+    
+    return jsonify({
+        'device_connected': device_connected,
+        'osc_running': osc_running,
+        'main_running': main_running
+    })
+
+
+
+@app.route('/api/data')
+def get_chart_data():
 
     global handlers
     
