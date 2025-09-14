@@ -137,29 +137,22 @@ class StrokeHandler(BaseHandler):
         return final_level, duration, new_velocity
 
     def osc_handler(self, address, *args):
-        if "PenOthers" in address and self.objective == "inserting_others":
-            logger.info(f"Match: inserting_others")
-            val = self.param_sanitizer(args)
-            if self.last_update_time is None:
-                self.last_update_time = time.time()
-            asyncio.create_task(self._handler(val))
-
-        elif "PenSelf" in address and self.objective == "inserting_self":
-            logger.info(f"Match: inserting_self")
-            val = self.param_sanitizer(args)
-            if self.last_update_time is None:
-                self.last_update_time = time.time()
-            asyncio.create_task(self._handler(val))
+        # Get the target parameter path for current objective
+        target_param = self.stroke_settings[self.objective]
+        
+        # Check if the incoming address matches the target parameter
+        # Support both exact match and wildcard match (ending with /*)
+        is_match = False
+        if target_param.endswith('/*'):
+            # Wildcard match - check if address starts with the base path
+            base_path = target_param[:-2]  # Remove /*
+            is_match = address.startswith(base_path)
+        else:
+            # Exact match
+            is_match = address == target_param
             
-        elif "PenOthers" in address and self.objective == "inserted_pussy":
-            logger.info(f"Match: inserted_pussy")
-            val = self.param_sanitizer(args)
-            if self.last_update_time is None:
-                self.last_update_time = time.time()
-            asyncio.create_task(self._handler(val))
-            
-        elif "PenOthers" in address and self.objective == "inserted_ass":
-            logger.info(f"Match: inserted_ass")
+        if is_match:
+            logger.info(f"Match: {self.objective} - {address}")
             val = self.param_sanitizer(args)
             if self.last_update_time is None:
                 self.last_update_time = time.time()
