@@ -1,3 +1,5 @@
+<img width="1113" height="878" alt="QQ截图20250915181648" src="https://github.com/user-attachments/assets/2ca60107-3e7d-42b3-9286-9ee2957327b2" />
+
 # OSR-VRChat
 
 [English Version](README_EN.md)
