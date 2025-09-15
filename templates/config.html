@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -72,14 +73,16 @@
             gap: 0.5rem;
         }
 
-        .form-control, .form-select {
+        .form-control,
+        .form-select {
             border: 2px solid #e5e7eb;
             border-radius: 10px;
             padding: 0.75rem 1rem;
             transition: all 0.3s ease;
         }
 
-        .form-control:focus, .form-select:focus {
+        .form-control:focus,
+        .form-select:focus {
             border-color: var(--primary-color);
             box-shadow: 0 0 0 0.2rem rgba(99, 102, 241, 0.25);
         }
@@ -132,9 +135,17 @@
         }
 
         @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.5; }
-            100% { opacity: 1; }
+            0% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+
+            100% {
+                opacity: 1;
+            }
         }
 
         .nav-tabs .nav-link {
@@ -203,12 +214,41 @@
             font-size: 14px;
             font-weight: 600;
             z-index: 10;
-            background: rgba(255,255,255,0.9);
+            background: rgba(255, 255, 255, 0.9);
             padding: 4px 8px;
             border-radius: 4px;
         }
+
+        .osr-btn-max {
+            background-color: #198754 !important;
+            border-color: #198754 !important;
+            color: white !important;
+            padding: 8px 12px !important;
+        }
+
+        .osr-btn-max:hover {
+            background-color: #157347 !important;
+            border-color: #146c43 !important;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .osr-btn-min {
+            background-color: #ffc107 !important;
+            border-color: #ffc107 !important;
+            color: #212529 !important;
+            padding: 8px 12px !important;
+        }
+
+        .osr-btn-min:hover {
+            background-color: #ffca2c !important;
+            border-color: #ffc720 !important;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
     </style>
 </head>
+
 <body>
     <div class="container-fluid">
         <div class="config-container">
@@ -223,19 +263,22 @@
                     <div class="col-md-4">
                         <div class="status-card">
                             <h6><i class="bi bi-usb-symbol"></i> 设备状态</h6>
-                            <p><span id="device-status" class="status-indicator status-disconnected"></span><span id="device-text">未连接</span></p>
+                            <p><span id="device-status" class="status-indicator status-disconnected"></span><span
+                                    id="device-text">未连接</span></p>
                         </div>
                     </div>
                     <div class="col-md-4">
                         <div class="status-card">
                             <h6><i class="bi bi-wifi"></i> OSC 状态</h6>
-                            <p><span id="osc-status" class="status-indicator status-disconnected"></span><span id="osc-text">未连接</span></p>
+                            <p><span id="osc-status" class="status-indicator status-disconnected"></span><span
+                                    id="osc-text">未连接</span></p>
                         </div>
                     </div>
                     <div class="col-md-4">
                         <div class="status-card">
                             <h6><i class="bi bi-activity"></i> 运行状态</h6>
-                            <p><span id="running-status" class="status-indicator status-disconnected"></span><span id="running-text">已停止</span></p>
+                            <p><span id="running-status" class="status-indicator status-disconnected"></span><span
+                                    id="running-text">已停止</span></p>
                         </div>
                     </div>
                 </div>
@@ -245,27 +288,32 @@
             <div class="config-section">
                 <ul class="nav nav-tabs" id="configTabs" role="tablist">
                     <li class="nav-item" role="presentation">
-                        <button class="nav-link active" id="osr-tab" data-bs-toggle="tab" data-bs-target="#osr-config" type="button" role="tab">
+                        <button class="nav-link active" id="osr-tab" data-bs-toggle="tab" data-bs-target="#osr-config"
+                            type="button" role="tab">
                             <i class="bi bi-cpu"></i> OSR 设备配置
                         </button>
                     </li>
                     <li class="nav-item" role="presentation">
-                        <button class="nav-link" id="vrchat-tab" data-bs-toggle="tab" data-bs-target="#vrchat-config" type="button" role="tab">
+                        <button class="nav-link" id="vrchat-tab" data-bs-toggle="tab" data-bs-target="#vrchat-config"
+                            type="button" role="tab">
                             <i class="bi bi-headset-vr"></i> VRChat 配置
                         </button>
                     </li>
                     <li class="nav-item" role="presentation">
-                        <button class="nav-link" id="network-tab" data-bs-toggle="tab" data-bs-target="#network-config" type="button" role="tab">
+                        <button class="nav-link" id="network-tab" data-bs-toggle="tab" data-bs-target="#network-config"
+                            type="button" role="tab">
                             <i class="bi bi-router"></i> 网络配置
                         </button>
                     </li>
                     <li class="nav-item" role="presentation">
-                        <button class="nav-link" id="advanced-tab" data-bs-toggle="tab" data-bs-target="#advanced-config" type="button" role="tab">
+                        <button class="nav-link" id="advanced-tab" data-bs-toggle="tab"
+                            data-bs-target="#advanced-config" type="button" role="tab">
                             <i class="bi bi-sliders"></i> 高级设置
                         </button>
                     </li>
                     <li class="nav-item" role="presentation">
-                        <button class="nav-link" id="monitor-tab" data-bs-toggle="tab" data-bs-target="#monitor-config" type="button" role="tab">
+                        <button class="nav-link" id="monitor-tab" data-bs-toggle="tab" data-bs-target="#monitor-config"
+                            type="button" role="tab">
                             <i class="bi bi-graph-up"></i> 数据监控
                         </button>
                     </li>
@@ -291,7 +339,8 @@
                                         </select>
                                     </div>
                                     <div class="mb-3">
-                                        <label for="objective" class="form-label"><i class="bi bi-target"></i> 动作目标</label>
+                                        <label for="objective" class="form-label"><i class="bi bi-target"></i>
+                                            动作目标</label>
                                         <select class="form-select" id="objective" name="objective">
                                             <option value="inserting_others">插入别人</option>
                                             <option value="inserting_self">插入自己</option>
@@ -301,39 +350,61 @@
                                     </div>
                                     <div class="mb-3">
                                         <div class="form-check form-switch">
-                                            <input class="form-check-input" type="checkbox" id="l0_axis_invert" name="l0_axis_invert">
+                                            <input class="form-check-input" type="checkbox" id="l0_axis_invert"
+                                                name="l0_axis_invert">
                                             <label class="form-check-label" for="l0_axis_invert">
                                                 <i class="bi bi-arrow-repeat"></i> L0轴反转
                                             </label>
                                         </div>
                                     </div>
+                                    <div class="mb-3">
+                                        <label class="form-label"><i class="bi bi-joystick"></i> OSR 位置控制</label>
+                                        <div class="d-flex gap-2">
+                                            <button type="button" class="btn flex-fill osr-btn-max"
+                                                onclick="moveToMaxPosition()">
+                                                <i class="bi bi-arrow-up-circle"></i> 移动到最大位置
+                                            </button>
+                                            <button type="button" class="btn flex-fill osr-btn-min"
+                                                onclick="moveToMinPosition()">
+                                                <i class="bi bi-arrow-down-circle"></i> 移动到最小位置
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="mb-3">
-                                        <label for="max_pos" class="form-label"><i class="bi bi-arrow-up-circle"></i> 最大位置</label>
+                                        <label for="max_pos" class="form-label"><i class="bi bi-arrow-up-circle"></i>
+                                            最大位置</label>
                                         <div class="input-group">
-                                            <input type="number" class="form-control" id="max_pos" name="max_pos" min="0" max="999">
+                                            <input type="number" class="form-control" id="max_pos" name="max_pos"
+                                                min="0" max="999">
                                             <span class="input-group-text">/ 999</span>
                                         </div>
                                     </div>
                                     <div class="mb-3">
-                                        <label for="min_pos" class="form-label"><i class="bi bi-arrow-down-circle"></i> 最小位置</label>
+                                        <label for="min_pos" class="form-label"><i class="bi bi-arrow-down-circle"></i>
+                                            最小位置</label>
                                         <div class="input-group">
-                                            <input type="number" class="form-control" id="min_pos" name="min_pos" min="0" max="999">
+                                            <input type="number" class="form-control" id="min_pos" name="min_pos"
+                                                min="0" max="999">
                                             <span class="input-group-text">/ 999</span>
                                         </div>
                                     </div>
                                     <div class="mb-3">
-                                        <label for="max_velocity" class="form-label"><i class="bi bi-speedometer2"></i> 最大速度</label>
+                                        <label for="max_velocity" class="form-label"><i class="bi bi-speedometer2"></i>
+                                            最大速度</label>
                                         <div class="input-group">
-                                            <input type="number" class="form-control" id="max_velocity" name="max_velocity" min="1">
+                                            <input type="number" class="form-control" id="max_velocity"
+                                                name="max_velocity" min="1">
                                             <span class="input-group-text">单位/秒</span>
                                         </div>
                                     </div>
                                     <div class="mb-3">
-                                        <label for="updates_per_second" class="form-label"><i class="bi bi-arrow-clockwise"></i> 更新频率</label>
+                                        <label for="updates_per_second" class="form-label"><i
+                                                class="bi bi-arrow-clockwise"></i> 更新频率</label>
                                         <div class="input-group">
-                                            <input type="number" class="form-control" id="updates_per_second" name="updates_per_second" min="1" max="100">
+                                            <input type="number" class="form-control" id="updates_per_second"
+                                                name="updates_per_second" min="1" max="100">
                                             <span class="input-group-text">次/秒</span>
                                         </div>
                                     </div>
@@ -348,29 +419,38 @@
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="mb-3">
-                                        <label for="vrchat_max" class="form-label"><i class="bi bi-bar-chart-line"></i> VRChat 最大值</label>
+                                        <label for="vrchat_max" class="form-label"><i class="bi bi-bar-chart-line"></i>
+                                            VRChat 最大值</label>
                                         <input type="number" class="form-control" id="vrchat_max" name="vrchat_max">
                                     </div>
                                     <div class="mb-3">
-                                        <label for="vrchat_min" class="form-label"><i class="bi bi-bar-chart-line"></i> VRChat 最小值</label>
+                                        <label for="vrchat_min" class="form-label"><i class="bi bi-bar-chart-line"></i>
+                                            VRChat 最小值</label>
                                         <input type="number" class="form-control" id="vrchat_min" name="vrchat_min">
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="mb-3">
-                                        <label for="inserting_others" class="form-label"><i class="bi bi-link"></i> 插入别人参数路径</label>
-                                        <input type="text" class="form-control" id="inserting_others" name="inserting_others">
+                                        <label for="inserting_others" class="form-label"><i class="bi bi-link"></i>
+                                            插入别人参数路径</label>
+                                        <input type="text" class="form-control" id="inserting_others"
+                                            name="inserting_others">
                                     </div>
                                     <div class="mb-3">
-                                        <label for="inserting_self" class="form-label"><i class="bi bi-link"></i> 插入自己参数路径</label>
-                                        <input type="text" class="form-control" id="inserting_self" name="inserting_self">
+                                        <label for="inserting_self" class="form-label"><i class="bi bi-link"></i>
+                                            插入自己参数路径</label>
+                                        <input type="text" class="form-control" id="inserting_self"
+                                            name="inserting_self">
                                     </div>
                                     <div class="mb-3">
-                                        <label for="inserted_pussy" class="form-label"><i class="bi bi-link"></i> 被插入（小穴）参数路径</label>
-                                        <input type="text" class="form-control" id="inserted_pussy" name="inserted_pussy">
+                                        <label for="inserted_pussy" class="form-label"><i class="bi bi-link"></i>
+                                            被插入（小穴）参数路径</label>
+                                        <input type="text" class="form-control" id="inserted_pussy"
+                                            name="inserted_pussy">
                                     </div>
                                     <div class="mb-3">
-                                        <label for="inserted_ass" class="form-label"><i class="bi bi-link"></i> 被插入（肛门）参数路径</label>
+                                        <label for="inserted_ass" class="form-label"><i class="bi bi-link"></i>
+                                            被插入（肛门）参数路径</label>
                                         <input type="text" class="form-control" id="inserted_ass" name="inserted_ass">
                                     </div>
                                 </div>
@@ -386,22 +466,26 @@
                                     <h6><i class="bi bi-broadcast"></i> OSC 配置</h6>
                                     <div class="mb-3">
                                         <label for="osc_listen_host" class="form-label">监听地址</label>
-                                        <input type="text" class="form-control" id="osc_listen_host" name="osc_listen_host">
+                                        <input type="text" class="form-control" id="osc_listen_host"
+                                            name="osc_listen_host">
                                     </div>
                                     <div class="mb-3">
                                         <label for="osc_listen_port" class="form-label">监听端口</label>
-                                        <input type="number" class="form-control" id="osc_listen_port" name="osc_listen_port" min="1" max="65535">
+                                        <input type="number" class="form-control" id="osc_listen_port"
+                                            name="osc_listen_port" min="1" max="65535">
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <h6><i class="bi bi-globe"></i> Web 服务器配置</h6>
                                     <div class="mb-3">
                                         <label for="web_listen_host" class="form-label">监听地址</label>
-                                        <input type="text" class="form-control" id="web_listen_host" name="web_listen_host">
+                                        <input type="text" class="form-control" id="web_listen_host"
+                                            name="web_listen_host">
                                     </div>
                                     <div class="mb-3">
                                         <label for="web_listen_port" class="form-label">监听端口</label>
-                                        <input type="number" class="form-control" id="web_listen_port" name="web_listen_port" min="1" max="65535">
+                                        <input type="number" class="form-control" id="web_listen_port"
+                                            name="web_listen_port" min="1" max="65535">
                                     </div>
                                 </div>
                             </div>
@@ -414,7 +498,8 @@
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="mb-3">
-                                        <label for="log_level" class="form-label"><i class="bi bi-journal-text"></i> 日志级别</label>
+                                        <label for="log_level" class="form-label"><i class="bi bi-journal-text"></i>
+                                            日志级别</label>
                                         <select class="form-select" id="log_level" name="log_level">
                                             <option value="DEBUG">DEBUG</option>
                                             <option value="INFO">INFO</option>
@@ -424,7 +509,8 @@
                                     </div>
                                     <div class="mb-3">
                                         <div class="form-check form-switch">
-                                            <input class="form-check-input" type="checkbox" id="auto_open_qr_web_page" name="auto_open_qr_web_page">
+                                            <input class="form-check-input" type="checkbox" id="auto_open_qr_web_page"
+                                                name="auto_open_qr_web_page">
                                             <label class="form-check-label" for="auto_open_qr_web_page">
                                                 <i class="bi bi-qr-code"></i> 自动打开网页
                                             </label>
@@ -433,8 +519,10 @@
                                 </div>
                                 <div class="col-md-6">
                                     <div class="mb-3">
-                                        <label for="ws_listen_port" class="form-label"><i class="bi bi-diagram-3"></i> WebSocket 端口</label>
-                                        <input type="number" class="form-control" id="ws_listen_port" name="ws_listen_port" min="1" max="65535">
+                                        <label for="ws_listen_port" class="form-label"><i class="bi bi-diagram-3"></i>
+                                            WebSocket 端口</label>
+                                        <input type="number" class="form-control" id="ws_listen_port"
+                                            name="ws_listen_port" min="1" max="65535">
                                     </div>
                                 </div>
                             </div>
@@ -477,10 +565,12 @@
                         <i class="bi bi-save"></i> 保存配置
                     </button>
 
-                    <button type="button" class="btn btn-secondary" onclick="restartBackend()">
+                    <button type="button" class="btn btn-secondary me-3" onclick="restartBackend()">
                         <i class="bi bi-arrow-clockwise"></i> 重新启动后端
                     </button>
                 </div>
+
+
             </div>
         </div>
     </div>
@@ -489,11 +579,11 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <!-- uPlot JS -->
     <script src="https://unpkg.com/uplot/dist/uPlot.iife.min.js"></script>
-    
+
     <!-- Custom JavaScript -->
     <script>
         // Load configuration on page load
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             loadConfig();
             updateStatus();
             // Update status every 2 seconds
@@ -505,7 +595,7 @@
             try {
                 const response = await fetch('/api/config');
                 const config = await response.json();
-                
+
                 // Populate OSR settings
                 document.getElementById('com_port').value = config.osr2.com_port;
                 document.getElementById('objective').value = config.osr2.objective;
@@ -514,7 +604,7 @@
                 document.getElementById('max_velocity').value = config.osr2.max_velocity;
                 document.getElementById('updates_per_second').value = config.osr2.updates_per_second;
                 document.getElementById('l0_axis_invert').checked = config.osr2.l0_axis_invert;
-                
+
                 // Populate VRChat settings
                 document.getElementById('vrchat_max').value = config.osr2.vrchat_max;
                 document.getElementById('vrchat_min').value = config.osr2.vrchat_min;
@@ -522,18 +612,18 @@
                 document.getElementById('inserting_self').value = config.osr2.inserting_self;
                 document.getElementById('inserted_pussy').value = config.osr2.inserted_pussy;
                 document.getElementById('inserted_ass').value = config.osr2.inserted_ass;
-                
+
                 // Populate Network settings
                 document.getElementById('osc_listen_host').value = config.osc.listen_host;
                 document.getElementById('osc_listen_port').value = config.osc.listen_port;
                 document.getElementById('web_listen_host').value = config.web_server.listen_host;
                 document.getElementById('web_listen_port').value = config.web_server.listen_port;
-                
+
                 // Populate Advanced settings
                 document.getElementById('log_level').value = config.log_level;
                 document.getElementById('auto_open_qr_web_page').checked = config.general.auto_open_qr_web_page;
                 document.getElementById('ws_listen_port').value = config.ws.listen_port;
-                
+
                 showAlert('配置加载成功', 'success');
             } catch (error) {
                 console.error('Error loading config:', error);
@@ -603,7 +693,7 @@
             try {
                 const response = await fetch('/api/status');
                 const status = await response.json();
-                
+
                 // Update device status
                 const deviceStatus = document.getElementById('device-status');
                 const deviceText = document.getElementById('device-text');
@@ -614,7 +704,7 @@
                     deviceStatus.className = 'status-indicator status-disconnected';
                     deviceText.textContent = '未连接';
                 }
-                
+
                 // Update OSC status
                 const oscStatus = document.getElementById('osc-status');
                 const oscText = document.getElementById('osc-text');
@@ -625,7 +715,7 @@
                     oscStatus.className = 'status-indicator status-disconnected';
                     oscText.textContent = '未运行';
                 }
-                
+
                 // Update running status
                 const runningStatus = document.getElementById('running-status');
                 const runningText = document.getElementById('running-text');
@@ -645,13 +735,13 @@
         async function restartBackend() {
             try {
                 showAlert('正在重启后端程序...', 'info');
-                
+
                 const response = await fetch('/restart', {
                     method: 'POST'
                 });
-                
+
                 const result = await response.json();
-                
+
                 if (result.success) {
                     showAlert('后端程序重启成功！', 'success');
                     // 延迟更新状态，给后端时间启动
@@ -667,12 +757,55 @@
             }
         }
 
+        // OSR Position Control Functions
+        async function moveToMaxPosition() {
+            try {
+                showAlert('正在移动到最大位置...', 'info');
+
+                const response = await fetch('/api/osr/move-max', {
+                    method: 'POST'
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showAlert('已移动到最大位置！', 'success');
+                } else {
+                    throw new Error(result.message || '移动失败');
+                }
+            } catch (error) {
+                console.error('Error moving to max position:', error);
+                showAlert('移动到最大位置失败: ' + error.message, 'danger');
+            }
+        }
+
+        async function moveToMinPosition() {
+            try {
+                showAlert('正在移动到最小位置...', 'info');
+
+                const response = await fetch('/api/osr/move-min', {
+                    method: 'POST'
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showAlert('已移动到最小位置！', 'success');
+                } else {
+                    throw new Error(result.message || '移动失败');
+                }
+            } catch (error) {
+                console.error('Error moving to min position:', error);
+                showAlert('移动到最小位置失败: ' + error.message, 'danger');
+            }
+        }
+
         // Show alert message
         function showAlert(message, type) {
             // Remove existing alerts
             const existingAlerts = document.querySelectorAll('.alert');
             existingAlerts.forEach(alert => alert.remove());
-            
+
             // Create new alert
             const alertDiv = document.createElement('div');
             alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
@@ -680,11 +813,11 @@
                 ${message}
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             `;
-            
+
             // Insert alert at the top of the config section
             const configSection = document.querySelector('.config-section');
             configSection.insertBefore(alertDiv, configSection.firstChild);
-            
+
             // Auto-dismiss after 5 seconds
             setTimeout(() => {
                 if (alertDiv.parentNode) {
@@ -799,4 +932,5 @@
         });
     </script>
 </body>
+
 </html>

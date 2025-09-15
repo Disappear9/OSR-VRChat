@@ -304,6 +304,48 @@ def restart_osr():
         logger.error(f"重启失败: {e}")
         return jsonify({'success': False, 'message': str(e)}), 500
 
+@app.route("/api/osr/move-max", methods=["POST"])
+def move_to_max_position():
+    """移动OSR设备到最大位置"""
+    global connector
+    try:
+        if not connector or not connector.ser or not connector.ser.is_open:
+            return jsonify({'success': False, 'message': 'OSR设备未连接'}), 400
+        
+        max_pos = SETTINGS['osr2']['max_pos']
+        # 发送位置命令，格式为L0XX，其中XX是位置值（0-99对应0-999）
+        position_value = int(max_pos / 10)  # 将0-999映射到0-99
+        command = f"L0{position_value:02d}"
+        
+        connector.write_to_serial(command)
+        logger.info(f"发送最大位置命令: {command} (位置: {max_pos})")
+        
+        return jsonify({'success': True, 'message': f'已发送移动到最大位置命令 ({max_pos})'})
+    except Exception as e:
+        logger.error(f"移动到最大位置失败: {e}")
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@app.route("/api/osr/move-min", methods=["POST"])
+def move_to_min_position():
+    """移动OSR设备到最小位置"""
+    global connector
+    try:
+        if not connector or not connector.ser or not connector.ser.is_open:
+            return jsonify({'success': False, 'message': 'OSR设备未连接'}), 400
+        
+        min_pos = SETTINGS['osr2']['min_pos']
+        # 发送位置命令，格式为L0XX，其中XX是位置值（0-99对应0-999）
+        position_value = int(min_pos / 10)  # 将0-999映射到0-99
+        command = f"L0{position_value:02d}"
+        
+        connector.write_to_serial(command)
+        logger.info(f"发送最小位置命令: {command} (位置: {min_pos})")
+        
+        return jsonify({'success': True, 'message': f'已发送移动到最小位置命令 ({min_pos})'})
+    except Exception as e:
+        logger.error(f"移动到最小位置失败: {e}")
+        return jsonify({'success': False, 'message': str(e)}), 500
+
 import click
 import logging
 log = logging.getLogger('werkzeug')
