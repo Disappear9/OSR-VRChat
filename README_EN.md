@@ -1,76 +1,278 @@
 # OSR-VRChat
 
-[中文版](README.md)
+[中文版本](README.md)
 
-An OSR robot driver that implements motion synchronization between the OSR robot and VRChat.
+A Python Flask-based OSR device control program that enables real-time motion synchronization between OSR robots and VRChat. It receives SPS plugin data from VRChat via OSC protocol and converts it into OSR device control commands.
 
-Special thanks to the [Shocking-VRChat](https://github.com/VRChatNext/Shocking-VRChat) coyote project for setting up the framework!
+## Features
 
-Test QQ group: 1034983762
+- 🎮 **VRChat Integration**: Real-time motion data reception from VRChat via OSC protocol
+- 🤖 **OSR Device Support**: Serial port control for OSR2/2+ devices
+- 🌐 **Web Interface**: Intuitive web-based configuration and monitoring interface
+- 📊 **Real-time Monitoring**: Live data charts and device status monitoring
+- ⚙️ **Flexible Configuration**: Multiple working modes and detailed parameter adjustment
+- 🔧 **Device Control**: Manual position control and device testing functionality
 
+## System Requirements
 
-## How to Use
+- Windows 10/11 (Recommended)
+- Python 3.8+ (if running from source)
+- OSR2/2+ device
+- VRChat + SPS plugin
+- Chrome browser (for device testing)
 
-### Preparation
+## Quick Start
 
-1. Ensure that both the penetrator's plug and the receiver's socket **are made based on SPS** (**DPS/TPS not supported** because these two plugins lack the OGB data interface for depth calculation).
+### Method 1: Using Pre-compiled Version (Recommended)
 
-2. Connect the OSR2 to the computer, turn on the OSR2 switch, and open the **Chrome** browser to the [Mosa controller](https://trymosa.netlify.app/) webpage. Select "Serial" in the top left corner and choose the corresponding serial port in the pop-up window.
+1. Download the latest `.exe` file from [Releases](../../releases)
+2. Double-click to run the program. First run will generate configuration file and exit
+3. Edit the generated `settings-advanced-v0.1.2.yaml` configuration file
+4. Run the program again to start using
 
-![text](images/com_example.png)
+### Method 2: Running from Source
 
-- As shown in the image, remember the serial port name in the red box (usually `COM` + a number). Drag the control axis to ensure the OSR device is working properly. After testing, **close the webpage** to release the serial port.
+1. **Clone the project**
+   ```bash
+   git clone <repository-url>
+   cd OSR-VRChat
+   ```
 
-3. Confirm that OSC data interface is enabled in VRChat and that the model’s attachment function is activated.
+2. **Install dependencies**
+   ```bash
+   pip install -r requirements.txt
+   ```
 
+3. **Run the program**
+   ```bash
+   python osr_vrchat.py
+   ```
 
-### Parameter Settings
-`objective`: The action type. The table below lists all allowed values and explanations:
+## Device Setup
 
-| `objective` | Explanation |
-|-------------|-------------|
-| `inserting_self` | Insert your own plug into someone else's socket |
-| `inserting_others` | Insert your own plug into your own socket (e.g., insert into your hand, typically used for testing) |
-| `inserted_ass` | Your socket located at the anus is inserted by someone else |
-| `inserted_pussy` | Your socket located at the vagina is inserted by someone else |
+### 1. OSR Device Setup
 
-Please enter the corresponding value in the settings file based on your usage.
+1. Connect OSR2 device to computer USB port
+2. Turn on OSR2 power switch
+3. Open [Mosa Controller](https://trymosa.netlify.app/) in Chrome browser
+4. Select "Serial" and choose the corresponding port in the popup
+5. Test L0 axis control, record suitable maximum and minimum values
+6. **Important**: Close the webpage after testing to release the serial port
 
-\
-`com_port`: The serial port for device connection. Enter the serial port number from the preparation (e.g., `COM5`).
+### 2. VRChat Setup
 
-The total movement range of OSR2 is **999** units (same as in Mosa).
+1. Ensure OSC functionality is enabled in VRChat
+2. Install and configure SPS plugin
+3. Confirm model's attachment functionality is working properly
+4. Ensure using SPS-based models (DPS/TPS not supported)
 
-`max_position`: Upper limit of movement position, range 0-999.
+## Configuration
 
-`min_position`: Lower limit of movement position, range 0-999.
+The program generates `settings-advanced-v0.1.2.yaml` configuration file on first run. Main configuration items:
 
-`max_velocity`: Speed limit (units/second), range 0-999.
+### OSR Device Configuration (`osr2`)
 
-`updates_per_second`: Number of updates per second, range 0-100.
+```yaml
+osr2:
+  com_port: "COM4"              # Serial port number from Device Manager
+  objective: "inserted_pussy"    # Working mode, see table below
+  max_pos: 500                  # Maximum position (0-999)
+  min_pos: 1                    # Minimum position (0-999)
+  max_velocity: 2000            # Maximum velocity (units/second)
+  updates_per_second: 50        # Update frequency (Hz)
+  vrchat_max: 700               # VRChat SPS data maximum value
+  vrchat_min: 200               # VRChat SPS data minimum value
+  l0_axis_invert: false         # L0 axis inversion
+```
 
+### Working Modes (`objective`)
 
-### Running the Program
+| Mode | Description |
+|------|-------------|
+| `inserting_others` | Using your penetrator to insert into others' orifice |
+| `inserting_self` | Using your penetrator to insert into your own orifice (for testing) |
+| `inserted_ass` | Your anal orifice being penetrated by others |
+| `inserted_pussy` | Your vaginal orifice being penetrated by others |
 
-1. Download the `osr_vrchat.exe` from the Releases section, run the program, and it will generate a settings file and automatically exit on the first run.
-2. Follow the above steps to perform device checks and correctly set the parameters.
-3. Run the program again to synchronize with VRChat. If parameters are changed, the program needs to be restarted to take effect.
+### Network Configuration
 
+```yaml
+web_server:
+  listen_host: "127.0.0.1"      # Web interface listen address
+  listen_port: 8800             # Web interface port
 
-## Q&A
+osc:
+  listen_host: "127.0.0.1"      # OSC listen address
+  listen_port: 9001             # OSC listen port
 
-### 1. What is OSR?
+ws:
+  listen_host: "0.0.0.0"        # WebSocket listen address
+  listen_port: 28846            # WebSocket port
+```
 
-OSR stands for **O**pen-source **S**troker **R**obot. Currently, this project only supports OSR2/2+, the most portable and compact model in the OSR lineup, supporting motion on 2/3 axes. Future updates will gradually include support for OSR6 and other more complex robots. For more information, refer to [this webpage](https://discuss.eroscripts.com/t/guide-what-is-the-osr2-sr6-ssr1-and-how-do-i-get-one/158805).
+## Usage
 
-### 2. How to Obtain OSR2 Devices?
+### 1. Start the Program
 
-Many sellers online offer finished devices and mounts. Prices usually depend on the quality/torque of the servo and the included accessories. You can purchase based on your needs and budget. If you want to build the OSR2 system yourself, refer to [this project](https://www.patreon.com/tempestvr).
+After running the program, it will automatically:
+- Connect to OSR device
+- Start OSC listening service
+- Start web server
+- Perform device self-check
 
-### 3. What is OGB?
+### 2. Access Web Interface
 
-The full name of the [OGB](https://osc.toys/) project is "Osc Goes Brrr", which synchronizes actions in games with toys that support [Intiface](https://intiface.com/). The author of OGB, Senky, is also the author of the SPS system, which reserved a series of OSC data interfaces at `/avatar/parameters/OGB/*` in the SPS plugin, greatly facilitating depth calculation.
+Open `http://127.0.0.1:8800` in your browser to access the control interface:
 
+- **Home**: Real-time data monitoring and charts
+- **Config Page**: Parameter configuration and device control
+- **Data Page**: Detailed data analysis
 
-## Update Plan
-A wearable solution will be released in March, supporting various positions. Stay tuned.
+### 3. Device Control Functions
+
+The configuration page provides the following control functions:
+- **Position Control**: Manually move device to maximum/minimum positions
+- **Axis Inversion**: L0 axis direction inversion switch
+- **Parameter Adjustment**: Real-time adjustment of various parameters
+- **Device Status**: View connection status and operation information
+
+### 4. Data Calibration
+
+1. Perform actions in VRChat for testing
+2. Observe "Raw Level" data changes in the web interface
+3. Adjust `vrchat_max` and `vrchat_min` parameters based on actual data range
+4. The program will automatically perform linear mapping to optimize motion range
+
+## API Endpoints
+
+The program provides the following REST API endpoints:
+
+### Device Control
+- `POST /api/osr/move-max` - Move to maximum position
+- `POST /api/osr/move-min` - Move to minimum position
+- `POST /start` - Start OSR service
+- `POST /stop` - Stop OSR service
+- `POST /restart` - Restart OSR service
+
+### Configuration Management
+- `GET /api/config` - Get current configuration
+- `POST /api/config` - Save configuration
+- `GET /api/status` - Get device status
+
+### Data Retrieval
+- `GET /api/data` - Get real-time chart data
+- `GET /check_alive` - Check service status
+
+## Project Structure
+
+```
+OSR-VRChat/
+├── osr_vrchat.py              # Main program file
+├── requirements.txt           # Python dependencies
+├── settings-advanced-v0.1.2.yaml  # Configuration file
+├── src/                       # Source code directory
+│   ├── connector/
+│   │   └── osr_connector.py   # OSR device connector
+│   └── handler/
+│       ├── base_handler.py    # Base handler
+│       └── stroke_handler.py  # Motion handler
+├── templates/                 # Web templates
+│   ├── index.html            # Home page template
+│   └── config.html           # Configuration page template
+└── wearable/                 # Wearable accessory 3D models
+    ├── base V1.stl
+    └── shoulder V1.stl
+```
+
+## Wearable Kit
+
+For better user experience, the project provides 3D printing files and installation guide for wearable kit.
+
+### Parts List
+
+**1. 2 Adjustable Magic Tape Straps**
+- Adjustable length 90-155cm preferred, width 5cm
+
+**2. Waist Belt**
+- Outer belt width for fixing should be 5cm
+
+**3. 3D Printing Kit**
+- Send the two `.stl` files in [wearable directory](wearable) to 3D printing service
+- `base V1.stl` - Base mounting component
+- `shoulder V1.stl` - Shoulder strap connector
+
+**4. 4 M4 10mm Screws and Screwdriver**
+
+### Installation Method
+
+1. Install the upper and lower parts of the kit to the OSR2 base and fix to the belt
+2. Install shoulder straps, thread one end through the kit's shoulder strap ring, fix the other end to the back of the belt
+3. Adjust belt position and tighten as much as possible
+4. Put on shoulder straps and install the cup
+5. Adjust screw rails to determine optimal distance between cup and belt
+6. Adjust shoulder strap length to choose the most suitable angle
+7. Connect OSR2 to computer
+
+### Recommended Links
+
+Please refer to the purchase link images in [wearable directory](wearable) to get related accessories.
+
+## Troubleshooting
+
+### Common Issues
+
+**Q: Device connection failed**
+A: Check if serial port number is correct, ensure no other programs are using the port
+
+**Q: Cannot receive VRChat data**
+A: Confirm VRChat OSC functionality is enabled, check OSC port configuration
+
+**Q: Incorrect device movement range**
+A: Recalibrate `max_pos`, `min_pos`, `vrchat_max`, `vrchat_min` parameters
+
+**Q: Cannot access web interface**
+A: Check firewall settings, confirm port 8800 is not occupied
+
+### Log Viewing
+
+The program outputs detailed logs to console during runtime, including:
+- Device connection status
+- OSC data reception status
+- Error messages and debug information
+
+## Development
+
+### Dependencies
+
+- **Flask**: Web server framework
+- **pyserial**: Serial communication
+- **python-osc**: OSC protocol support
+- **loguru**: Logging
+- **PyYAML**: Configuration file parsing
+- **websockets**: WebSocket support
+
+### Extension Development
+
+The project uses modular design for easy extension:
+- Add new device connectors (`src/connector/`)
+- Implement new data handlers (`src/handler/`)
+- Customize web interface (`templates/`)
+
+## Acknowledgments
+
+- Thanks to [Shocking-VRChat](https://github.com/VRChatNext/Shocking-VRChat) project for framework reference
+- Thanks to [OGB](https://osc.toys/) project for OSC data interfaces
+- Thanks to [SPS](https://github.com/SenkyDragon/SPS) plugin author for technical support
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details
+
+## Contact
+
+- Test QQ Group: 1034983762
+- GitHub Issues: [Submit Issues](../../issues)
+
+---
+
+**Note**: This project is for educational and research purposes only. Please comply with local laws and regulations.
