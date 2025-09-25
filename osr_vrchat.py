@@ -5,7 +5,7 @@ from loguru import logger
 import traceback
 import random
 
-from flask import Flask, jsonify, render_template, render_template_string
+from flask import Flask, jsonify, render_template, render_template_string, request
 
 from src.connector.osr_connector import OSRConnector
 from src.handler.stroke_handler import StrokeHandler                                                                                                                                                                                                                  
@@ -40,6 +40,7 @@ SETTINGS = {
         'vrchat_max':1000,
         'vrchat_min':0,
         'max_velocity': 1400,
+        'l0_axis_invert': False,
         # 'max_acceleration':5000,
         'updates_per_second': 50,
         'com_port':'COM4',
@@ -117,7 +118,10 @@ async def async_main():
             if transport:
                 transport.close()
             if connector:
-                connector.disconnect()
+                # 使用同步方式关闭串口连接
+                if hasattr(connector, 'ser') and connector.ser and connector.ser.is_open:
+                    connector.ser.close()
+                    print(f"Disconnected from {connector.port}.")
 
     except Exception as e:
         logger.error(traceback.format_exc())
@@ -168,10 +172,68 @@ def config_init():
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    return render_template('config.html')
 
 @app.route('/data')
-def data():
+def data_page():
+    return render_template('index.html')
+
+@app.route('/config')
+def config_page():
+    return render_template('config.html')
+
+@app.route('/api/config', methods=['GET'])
+def get_config():
+    """获取当前配置"""
+    return jsonify(SETTINGS)
+
+@app.route('/api/config', methods=['POST'])
+def save_config():
+    """保存配置"""
+    try:
+        new_config = request.json
+        
+        # 更新配置
+        if 'osr2' in new_config:
+            SETTINGS['osr2'].update(new_config['osr2'])
+        if 'osc' in new_config:
+            SETTINGS['osc'].update(new_config['osc'])
+        if 'web_server' in new_config:
+            SETTINGS['web_server'].update(new_config['web_server'])
+        if 'ws' in new_config:
+            SETTINGS['ws'].update(new_config['ws'])
+        if 'general' in new_config:
+            SETTINGS['general'].update(new_config['general'])
+        if 'log_level' in new_config:
+            SETTINGS['log_level'] = new_config['log_level']
+            
+        # 保存到文件
+        config_save()
+        
+        return jsonify({'success': True, 'message': '配置保存成功'})
+    except Exception as e:
+        logger.error(f"保存配置失败: {e}")
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@app.route('/api/status', methods=['GET'])
+def get_status():
+    """获取系统状态"""
+    global connector, transport, th
+    
+    device_connected = connector is not None and connector.ser is not None
+    osc_running = transport is not None
+    main_running = th is not None and th.is_alive()
+    
+    return jsonify({
+        'device_connected': device_connected,
+        'osc_running': osc_running,
+        'main_running': main_running
+    })
+
+
+
+@app.route('/api/data')
+def get_chart_data():
 
     global handlers
     
@@ -211,6 +273,79 @@ def stop_osr():
     print(th.isAlive())
     return "OSR main loop stopped."
 
+@app.route("/restart", methods=["POST","GET"])
+def restart_osr():
+    """重启后端程序"""
+    global main_future, th, connector, transport
+    try:
+        # 停止当前运行的程序
+        if main_future and not main_future.done():
+            main_future.cancel()
+        if th and th.is_alive():
+            th.join(10)
+        
+        # 确保串口连接完全断开
+        if connector:
+            # 使用同步方式关闭串口连接
+            if hasattr(connector, 'ser') and connector.ser and connector.ser.is_open:
+                connector.ser.close()
+                print(f"Disconnected from {connector.port}.")
+            connector = None
+        
+        # 确保transport关闭
+        if transport:
+            transport.close()
+            transport = None
+        
+        # 重新启动（不打开浏览器）
+        main_without_browser()
+        return jsonify({'success': True, 'message': '后端程序重启成功'})
+    except Exception as e:
+        logger.error(f"重启失败: {e}")
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@app.route("/api/osr/move-max", methods=["POST"])
+def move_to_max_position():
+    """移动OSR设备到最大位置"""
+    global connector
+    try:
+        if not connector or not connector.ser or not connector.ser.is_open:
+            return jsonify({'success': False, 'message': 'OSR设备未连接'}), 400
+        
+        max_pos = SETTINGS['osr2']['max_pos']
+        # 发送位置命令，格式为L0XX，其中XX是位置值（0-99对应0-999）
+        position_value = int(max_pos / 10)  # 将0-999映射到0-99
+        command = f"L0{position_value:02d}"
+        
+        connector.write_to_serial(command)
+        logger.info(f"发送最大位置命令: {command} (位置: {max_pos})")
+        
+        return jsonify({'success': True, 'message': f'已发送移动到最大位置命令 ({max_pos})'})
+    except Exception as e:
+        logger.error(f"移动到最大位置失败: {e}")
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@app.route("/api/osr/move-min", methods=["POST"])
+def move_to_min_position():
+    """移动OSR设备到最小位置"""
+    global connector
+    try:
+        if not connector or not connector.ser or not connector.ser.is_open:
+            return jsonify({'success': False, 'message': 'OSR设备未连接'}), 400
+        
+        min_pos = SETTINGS['osr2']['min_pos']
+        # 发送位置命令，格式为L0XX，其中XX是位置值（0-99对应0-999）
+        position_value = int(min_pos / 10)  # 将0-999映射到0-99
+        command = f"L0{position_value:02d}"
+        
+        connector.write_to_serial(command)
+        logger.info(f"发送最小位置命令: {command} (位置: {min_pos})")
+        
+        return jsonify({'success': True, 'message': f'已发送移动到最小位置命令 ({min_pos})'})
+    except Exception as e:
+        logger.error(f"移动到最小位置失败: {e}")
+        return jsonify({'success': False, 'message': str(e)}), 500
+
 import click
 import logging
 log = logging.getLogger('werkzeug')
@@ -222,6 +357,27 @@ def echo(text, file=None, nl=None, err=None, color=None, **styles):
 click.echo = echo
 click.secho = secho
 
+
+def main_without_browser():
+    """启动主程序但不打开浏览器"""
+    global dispatcher, handlers,th
+    dispatcher = Dispatcher()
+    handlers = []
+
+    insert_params = SETTINGS['osr2'][SETTINGS['osr2']['objective']]
+
+    stroke_handler = StrokeHandler(SETTINGS=SETTINGS)
+    handlers.append(stroke_handler)
+
+    target_param = insert_params#[SETTINGS['osr2']['objective']]
+    logger.success(f"Listening：{target_param}")
+    dispatcher.map(target_param, handlers[0].osc_handler)
+
+    if SETTINGS['osr2']['objective'] not in ['inserting_others','inserting_self','inserted_ass','inserted_pussy']:
+        logger.error("Wrong objective type!")
+
+    th = Thread(target=async_main_wrapper, daemon=True)
+    th.start()
 
 def main():
     global dispatcher, handlers,th
@@ -262,5 +418,9 @@ if __name__ == "__main__":
     
     logger.info('Exiting in 1 seconds ... Press Ctrl-C to exit immediately')
     logger.info('退出等待1秒 ... 按Ctrl-C立即退出')
-    connector.disconnect()
+    if connector:
+        # 使用同步方式关闭串口连接
+        if hasattr(connector, 'ser') and connector.ser and connector.ser.is_open:
+            connector.ser.close()
+            print(f"Disconnected from {connector.port}.")
     time.sleep(1)

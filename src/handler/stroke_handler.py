@@ -17,6 +17,7 @@ class StrokeHandler(BaseHandler):
         self.min_pos = self.stroke_settings['min_pos']
         self.updates_per_second = self.stroke_settings['updates_per_second']
         self.max_velocity = self.stroke_settings['max_velocity']
+        self.l0_axis_invert = self.stroke_settings.get('l0_axis_invert', False)
         # self.max_acceleration = self.stroke_settings['max_acceleration']
         # self.ema_filter = self.stroke_settings['ema_filter']
         self.vrchat_min = self.stroke_settings['vrchat_min']
@@ -95,7 +96,10 @@ class StrokeHandler(BaseHandler):
 
 
         
-        self.expected_time = 1000 * (new_level - self.last_level) / abs(new_velocity)
+        if abs(new_velocity) > 0:
+            self.expected_time = 1000 * (new_level - self.last_level) / abs(new_velocity)
+        else:
+            self.expected_time = 0.02  # 默认20ms
         self.panel_data["raw_level"] = new_level*1000
         self.panel_data["raw_velocity"] = new_velocity
         self.panel_data["raw_acceleration"] = acceleration
@@ -133,28 +137,38 @@ class StrokeHandler(BaseHandler):
         return final_level, duration, new_velocity
 
     def osc_handler(self, address, *args):
-        # logger.info(f"VRCOSC: {address}: {args}")
-        if "PenOthers" in address and self.objective == "inserting_others":
-            # logger.info(f"VRCOSC: {address}: {args}")
+        # Get the target parameter path for current objective
+        target_param = self.stroke_settings[self.objective]
+        
+        # Check if the incoming address matches the target parameter
+        # Support both exact match and wildcard match (ending with /*)
+        is_match = False
+        if target_param.endswith('/*'):
+            # Wildcard match - check if address starts with the base path
+            base_path = target_param[:-2]  # Remove /*
+            is_match = address.startswith(base_path)
+        else:
+            # Exact match
+            is_match = address == target_param
+            
+        if is_match:
+            logger.info(f"Match: {self.objective} - {address}")
             val = self.param_sanitizer(args)
             if self.last_update_time is None:
                 self.last_update_time = time.time()
             asyncio.create_task(self._handler(val))
-            return 1
-
-        elif "PenSelf" in address and self.objective == "inserting_self":
-            logger.info(f"VRCOSC: {address}: {args}")
-            val = self.param_sanitizer(args)
-            if self.last_update_time is None:
-                self.last_update_time = time.time()
-            asyncio.create_task(self._handler(val))
-            return 1
     
 
     def build_tcode_interval(self, level, duration):
+        # Apply L0 axis inversion if enabled
+        if self.l0_axis_invert:
+            level = 1.0 - level
         return f"L0{int(round(level,3)*1000)}I{int(round(duration,3)*1000)}"
     
     def build_tcode_velocity(self, level, velocity):
+        # Apply L0 axis inversion if enabled
+        if self.l0_axis_invert:
+            level = 1.0 - level
         logger.info(f"L0{int(round(level,3)*1000)}S{int(round(velocity,3))}")
         return f"L0{int(round(level,3)*1000)}S{int(round(velocity,3))}"
 
@@ -162,7 +176,7 @@ class StrokeHandler(BaseHandler):
         new_level, duration, new_velocity = self.calculate_new_position_linear(new_level=level)
         if duration <= 0:
             return
-        logger.info(f"Calculated new level:{new_level}, duration:{duration}")
+        logger.info(f"Level:{new_level}, duration:{duration}")
         tcode = self.build_tcode_velocity(new_level, abs(new_velocity))
         if not self.OSR_CONN is None:
             await self.OSR_CONN.async_write_to_serial(tcode)
