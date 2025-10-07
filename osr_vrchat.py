@@ -54,11 +54,6 @@ SETTINGS = {
         'inserted_pussy': "/avatar/parameters/OGB/Orf/Pussy/PenOthers"
     },
     'version': CONFIG_FILE_VERSION,
-    'ws':{
-        'master_uuid': None,
-        'listen_host': '0.0.0.0',
-        'listen_port': 28846 
-    },
     'osc':{
         'listen_host': '127.0.0.1',
         'listen_port': 9001,
@@ -135,11 +130,12 @@ async def async_main():
         finally:
             if transport:
                 transport.close()
+                logger.info("transport.close()")
             if connector:
                 # 使用同步方式关闭串口连接
-                if hasattr(connector, 'ser') and connector.ser and connector.ser.is_open:
+                if connector.ser and connector.ser.is_open:
                     connector.ser.close()
-                    print(f"Disconnected from {connector.port}.")
+                    logger.info(f"Disconnected from {connector.port}.")
 
     except Exception as e:
         logger.error(traceback.format_exc())
@@ -164,7 +160,6 @@ def config_init():
     logger.info(f'Init settings..., Config filename: {CONFIG_FILENAME}, Config version: {CONFIG_FILE_VERSION}.')
     global SETTINGS, SETTINGS_BASIC, SERVER_IP
     if not (os.path.exists(CONFIG_FILENAME)):
-        SETTINGS['ws']['master_uuid'] = str(uuid.uuid4())
         config_save()
         raise ConfigFileInited()
 
@@ -174,15 +169,12 @@ def config_init():
     if SETTINGS.get('version', None) != CONFIG_FILE_VERSION:# or SETTINGS_BASIC.get('version', None) != CONFIG_FILE_VERSION:
         logger.error(f"Configuration file version mismatch! Please delete the {CONFIG_FILENAME} files and run the program again to generate the latest version of the configuration files.")
         raise Exception(f'配置文件版本不匹配！请删除 {CONFIG_FILENAME} 文件后再次运行程序，以生成最新版本的配置文件。')
-    if SETTINGS['ws']['master_uuid'] is None:
-        SETTINGS['ws']['master_uuid'] = str(uuid.uuid4())
-        config_save()
     SERVER_IP = SETTINGS['SERVER_IP']# or get_current_ip()
 
     logger.remove()
     logger.add(sys.stderr, level=SETTINGS['log_level'])
-    logger.success("The configuration file initialization is complete. The WebSocket service needs to listen for incoming connections. If a firewall prompt appears, please click Allow Access.")
-    logger.success("配置文件初始化完成，Websocket服务需要监听外来连接，如弹出防火墙提示，请点击允许访问。")
+    logger.success("The configuration file initialization is complete. If a firewall prompt appears, please click Allow Access.")
+    logger.success("配置文件初始化完成，如弹出防火墙提示，请点击允许访问。")
 
 
 
@@ -218,8 +210,6 @@ def save_config():
             SETTINGS['osc'].update(new_config['osc'])
         if 'web_server' in new_config:
             SETTINGS['web_server'].update(new_config['web_server'])
-        if 'ws' in new_config:
-            SETTINGS['ws'].update(new_config['ws'])
         if 'general' in new_config:
             SETTINGS['general'].update(new_config['general'])
         if 'log_level' in new_config:

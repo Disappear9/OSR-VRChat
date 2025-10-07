@@ -90,7 +90,7 @@ class OSRConnector:
                 logger.info(f"[UDP SEND] {line}")
                 self.sock.sendto(f"{line}\n".encode('utf-8'), (self.ip, self.port))
 
-    def write_to_serial(self, *lines):
+    async def write_to_serial(self, *lines):
         if self.ser and self.ser.is_open:
             with self.writer_lock:
                 for line in lines:

@@ -528,14 +528,6 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label for="ws_listen_port" class="form-label"><i class="bi bi-diagram-3"></i>
-                                            WebSocket 端口</label>
-                                        <input type="number" class="form-control" id="ws_listen_port"
-                                            name="ws_listen_port" min="1" max="65535">
-                                    </div>
-                                </div>
                             </div>
                         </form>
                     </div>
@@ -636,7 +628,6 @@
                 // Populate Advanced settings
                 document.getElementById('log_level').value = config.log_level;
                 document.getElementById('auto_open_web_page').checked = config.general.auto_open_web_page;
-                document.getElementById('ws_listen_port').value = config.ws.listen_port;
 
                 showAlert('配置加载成功', 'success');
             } catch (error) {
@@ -678,9 +669,6 @@
                     log_level: document.getElementById('log_level').value,
                     general: {
                         auto_open_web_page: document.getElementById('auto_open_web_page').checked
-                    },
-                    ws: {
-                        listen_port: parseInt(document.getElementById('ws_listen_port').value)
                     }
                 };
 
