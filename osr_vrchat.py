@@ -300,7 +300,7 @@ def restart_osr():
             # 使用同步方式关闭串口连接
             if hasattr(connector, 'ser') and connector.ser and connector.ser.is_open:
                 connector.ser.close()
-                print(f"Disconnected from {connector.port}.")
+                logger.info(f"Disconnected from {connector.port}.")
             connector = None
         
         # 确保transport关闭
@@ -328,7 +328,10 @@ def move_to_max_position():
         position_value = int(max_pos / 10)  # 将0-999映射到0-99
         command = f"L0{position_value:02d}"
         
-        connector.write_to_serial(command)
+        if (SETTINGS['osr2']['use_udp'] == False):
+            connector.write_to_serial(command)
+        else:
+            connector.write_to_udp(command)
         logger.info(f"发送最大位置命令: {command} (位置: {max_pos})")
         
         return jsonify({'success': True, 'message': f'已发送移动到最大位置命令 ({max_pos})'})
@@ -349,7 +352,10 @@ def move_to_min_position():
         position_value = int(min_pos / 10)  # 将0-999映射到0-99
         command = f"L0{position_value:02d}"
         
-        connector.write_to_serial(command)
+        if (SETTINGS['osr2']['use_udp'] == False):
+            connector.write_to_serial(command)
+        else:
+            connector.write_to_udp(command)
         logger.info(f"发送最小位置命令: {command} (位置: {min_pos})")
         
         return jsonify({'success': True, 'message': f'已发送移动到最小位置命令 ({min_pos})'})
@@ -434,5 +440,5 @@ if __name__ == "__main__":
         # 使用同步方式关闭串口连接
         if hasattr(connector, 'ser') and connector.ser and connector.ser.is_open:
             connector.ser.close()
-            print(f"Disconnected from {connector.port}.")
+            logger.info(f"Disconnected from {connector.port}.")
     time.sleep(1)
